@@ -1,24 +1,26 @@
-/**
- * Crearemos nuestro servidor con express es por ello que es necesario
- * importar el módulo de express
- */
-import express from "express";
+import express from "express"; // Crearemos nuestro servidor con express
+import dotenv from 'dotenv';
+import {connectDB} from './config/db.js'
 
 /**
  * La variable app contendrá toda la funcionalidad que requerimos
  * para crear nuestro servidor
  */
 const app = express();
+dotenv.config(); //Con esta linea escanea el archivo .env
 
-/**
- * use() Es una forma en la que express maneja el routing
- * req: Lo que enviamos
- * res: La respuesta que se obtiene del servidor
- */
-app.use('/', (req,res) => {
-    res.send('Hola mundo');
+//routes
+app.get('/ping',async(req,res) => {
+    const result = await connectDB.query('SELECT * from medical_records')
+    res.json(result)
 });
 
-app.listen(4000, () => {
-    console.log('Servidor funcionando en puerto 4000');
-});
+//settings
+app.set('port', process.env.port || 4000 );
+
+app.listen(app.get('port'), () => {
+    console.log('Servidor funcionando en puerto',app.get('port'));
+}); 
+
+// pendiente
+// connectDB();
