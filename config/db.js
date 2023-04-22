@@ -15,9 +15,6 @@ console.log(connection);
 
 export const connectDB = createPool(connection);
 
-
-
-
 // async function connectDB(){
 //   try {
 //     const poolConfig = {
