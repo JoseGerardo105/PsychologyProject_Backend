@@ -1,0 +1,89 @@
+### test 
+GET http://localhost:4000/ping
+
+### get inscription by id_student
+
+GET http://localhost:3000/inscription/201920468
+
+### post inscription
+POST http://localhost:3000/inscription
+Content-Type: application/json
+
+{
+    "id_student": 201920468,
+    "id_subject": 36,
+    "registrationDate": "2022-07-22T22:03:48.000Z"
+}
+
+### delete inscription by id_student
+DELETE http://localhost:3000/inscription/68
+
+### patch inscriptions by id
+PATCH http://localhost:3000/inscription/45
+Content-Type: application/json
+
+{
+    "id_subject": 32
+}
+
+###__________________________________________________________
+###get students
+GET http://localhost:3000/students
+
+### get student by id
+GET http://localhost:3000/students/201920469
+
+### post student
+POST http://localhost:3000/students
+Content-Type: application/json
+
+{
+        "id": 2,
+        "document_number": "1",
+        "document_type": "CC",
+        "name": "PRUEBA",
+        "surname": "PRUEBA",
+        "state": "M"
+    }
+
+### delete student by id
+DELETE http://localhost:3000/students/2
+
+### patch student by id
+PATCH http://localhost:3000/students/201920469
+Content-Type: application/json
+
+{
+    "state": "S"
+}
+
+###__________________________________________________________
+###get subjects
+GET http://localhost:3000/subjects
+
+### get subject by id
+GET http://localhost:3000/subjects/100
+
+### post subject
+POST http://localhost:3000/subjects
+Content-Type: application/json
+
+{
+        "id": 100,
+        "code": "81071288",
+        "name": "NUEVA ASIGNATURA",
+        "credits": 4,
+        "quotas": 40,
+        "state": 1
+    }
+
+### delete subject by id
+DELETE http://localhost:3000/subjects/100
+
+### patch subject by id
+PATCH http://localhost:3000/subjects/101
+Content-Type: application/json
+
+{
+    "state": 0
+}
