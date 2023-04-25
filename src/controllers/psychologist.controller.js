@@ -7,16 +7,18 @@ const register = async (req, res) => {
 
   // Validar la información del usuario
   if (!name || !email || !password) {
-    return res.status(400).json({ error: "All fields are required" });
+    return res.status(400).json({ error: "Todos los campos son obligatorios" });
   }
   const emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
   if (!emailRegex.test(email)) {
-    return res.status(400).json({ error: "Invalid email format" });
+    return res
+      .status(400)
+      .json({ error: "Formato de correo electrónico no válido" });
   }
   if (password.length < 8) {
     return res
       .status(400)
-      .json({ error: "Password must be at least 8 characters long" });
+      .json({ error: "La contraseña debe tener al menos 8 caracteres" });
   }
 
   try {
@@ -27,14 +29,21 @@ const register = async (req, res) => {
     if (result[0].length > 0) {
       res
         .status(409)
-        .json({ error: "A psychologist with this email already exists" });
+        .json({ error: "Ya existe un psicólogo con este correo electrónico" });
     } else {
       const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
       const [rows] = await connectDB.query(
-        "INSERT INTO psychologists(name,email,password) VALUES (?, ?, ?)", [name,email,hashedPassword]
+        "INSERT INTO psychologists(name,email,password) VALUES (?, ?, ?)",
+        [name, email, hashedPassword]
       );
-      res.status(201).json({ message: "Psychologist registered successfully", id:rows.insertId, name, email,hashedPassword});
+      res.status(201).json({
+        message: "Psicólogo registrado con éxito",
+        id: rows.insertId,
+        name,
+        email,
+        hashedPassword,
+      });
     }
   } catch (error) {
     console.log(error);
@@ -49,12 +58,13 @@ const getPsychologists = async (req, res) => {
 };
 
 const login = async (req, res) => {
-
-  const {email, password} = req.body
+  const { email, password } = req.body;
 
   // Validar la información del usuario
   if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required" });
+    return res
+      .status(400)
+      .json({ error: "Correo electrónico y contraseña obligatorios" });
   }
   try {
     const result = await connectDB.query(
@@ -63,7 +73,9 @@ const login = async (req, res) => {
     );
 
     if (result.length === 0) {
-      res.status(401).json({ error: "Invalid email or password" });
+      res
+        .status(401)
+        .json({ error: "Correo electrónico o contraseña no válidos" });
     } else {
       const isPasswordValid = await bcrypt.compare(
         password,
@@ -76,89 +88,9 @@ const login = async (req, res) => {
         });
         res.status(200).json({ token });
       } else {
-        res.status(401).json({ error: "Invalid email or password" });
-      }
-    }
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-
-  // res.json({ url: "Ingresando psicólogo" });
-};
-
-/*const register = async (req, res) => {
-  // Validar la información del usuario
-  if (!req.body.name || !req.body.email || !req.body.password) {
-    return res.status(400).json({ error: "All fields are required" });
-  }
-  const emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
-  if (!emailRegex.test(req.body.email)) {
-    return res.status(400).json({ error: "Invalid email format" });
-  }
-  if (req.body.password.length < 8) {
-    return res
-      .status(400)
-      .json({ error: "Password must be at least 8 characters long" });
-  }
-
-  try {
-    const result = await connectDB.query(
-      "SELECT * FROM psychologists WHERE email = ?",
-      req.body.email
-    );
-    console.log("Query result:", result[0]);
-    if (result[0].length > 0) {
-      res
-        .status(409)
-        .json({ error: "A psychologist with this email already exists" });
-    } else {
-      const hashedPassword = await bcrypt.hash(req.body.password, 10);
-
-      const psychologistData = {
-        name: req.body.name,
-        email: req.body.email,
-        password: hashedPassword,
-      };
-
-      await connectDB.query(
-        "INSERT INTO psychologists SET ?",
-        psychologistData
-      );
-      res.status(201).json({ message: "Psychologist registered successfully" });
-    }
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};*/
-
-/*const login = async (req, res) => {
-  // Validar la información del usuario
-  if (!req.body.email || !req.body.password) {
-    return res.status(400).json({ error: "Email and password are required" });
-  }
-  try {
-    const result = await connectDB.query(
-      "SELECT * FROM psychologists WHERE email = ?",
-      req.body.email
-    );
-
-    if (result.length === 0) {
-      res.status(401).json({ error: "Invalid email or password" });
-    } else {
-      const isPasswordValid = await bcrypt.compare(
-        req.body.password,
-        result[0][0].password
-      );
-
-      if (isPasswordValid) {
-        const token = jwt.sign({ id: result.id }, "your_jwt_secret", {
-          expiresIn: "1h",
-        });
-        res.status(200).json({ token });
-      } else {
-        res.status(401).json({ error: "Invalid email or password" });
+        res
+          .status(401)
+          .json({ error: "Correo electrónico o contraseña no válidos" });
       }
     }
   } catch (error) {
@@ -166,20 +98,19 @@ const login = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-*/
 
 const changePassword = async (req, res) => {
   // Validar la información del usuario
   if (!req.body.email || !req.body.newPassword) {
     return res
       .status(400)
-      .json({ error: "Email and new password are required" });
+      .json({ error: "Se requiere correo electrónico y nueva contraseña" });
   }
 
   if (req.body.newPassword.length < 8) {
     return res
       .status(400)
-      .json({ error: "New password must be at least 8 characters long" });
+      .json({ error: "La nueva contraseña debe tener al menos 8 caracteres" });
   }
 
   try {
@@ -190,7 +121,7 @@ const changePassword = async (req, res) => {
     );
 
     if (result[0].length === 0) {
-      res.status(404).json({ error: "Psychologist not found" });
+      res.status(404).json({ error: "Psicólogo no encontrado" });
     } else {
       const hashedPassword = await bcrypt.hash(req.body.newPassword, 10);
 
@@ -198,7 +129,7 @@ const changePassword = async (req, res) => {
         "UPDATE psychologists SET password = ? WHERE email = ?",
         [hashedPassword, req.body.email]
       );
-      res.status(200).json({ message: "Password changed successfully" });
+      res.status(200).json({ message: "Contraseña modificada correctamente" });
     }
   } catch (error) {
     console.error(error);
