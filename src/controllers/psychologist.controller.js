@@ -26,16 +26,18 @@ const register = async (req, res) => {
 
   // Validar la información del usuario
   if (!name || !email || !password) {
-    return res.status(400).json({ error: "All fields are required" });
+    return res.status(400).json({ error: "Todos los campos son obligatorios" });
   }
   const emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
   if (!emailRegex.test(email)) {
-    return res.status(400).json({ error: "Invalid email format" });
+    return res
+      .status(400)
+      .json({ error: "Formato de correo electrónico no válido" });
   }
   if (password.length < 8) {
     return res
       .status(400)
-      .json({ error: "Password must be at least 8 characters long" });
+      .json({ error: "La contraseña debe tener al menos 8 caracteres" });
   }
 
   try {
@@ -43,7 +45,7 @@ const register = async (req, res) => {
     if (result[0].length > 0) {
       res
         .status(409)
-        .json({ error: "A psychologist with this email already exists" });
+        .json({ error: "Ya existe un psicólogo con este correo electrónico" });
     } else {
       const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
@@ -51,13 +53,7 @@ const register = async (req, res) => {
         "INSERT INTO psychologists(name,email,password) VALUES (?, ?, ?)",
         [name, email, hashedPassword]
       );
-      res.status(201).json({
-        message: "Psychologist registered successfully",
-        id: rows.insertId,
-        name,
-        email,
-        hashedPassword,
-      });
+      res.status(201).json({ message: "Psychologist registered successfully", id:rows.insertId, name, email,hashedPassword});
     }
   } catch (error) {
     console.log(error);
@@ -76,12 +72,16 @@ const login = async (req, res) => {
 
   // Validar la información del usuario
   if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required" });
+    return res
+      .status(400)
+      .json({ error: "Correo electrónico y contraseña obligatorios" });
   }
   try {
     const result = checkUserByEmail(email);
     if (result.length === 0) {
-      res.status(401).json({ error: "Invalid email or password" });
+      res
+        .status(401)
+        .json({ error: "Correo electrónico o contraseña no válidos" });
     } else {
       const isPasswordValid = await bcrypt.compare(
         password,
@@ -101,93 +101,8 @@ const login = async (req, res) => {
     console.log(error);
     res.status(500).json({ error: "Internal server error" });
   }
-};
 
-const forgetPassword = async (req, res) => {
-  const { email, name, password } = req.body;
-
-  //Verificar la existencia de un usuario con determinado email
-  try {
-    const result = await checkUserByEmail(email);
-
-    if (result.length === 0) {
-      const error = new Error("El usuario no existe");
-      res.status(404).json({ msg: error.message });
-    } else {
-      //Si el usuario existe generamos un Token que se envía al correo
-      const token = generateToken();
-
-      const [result] = await connectDB.query(
-        "UPDATE psychologists SET name = IFNULL(?,name), password=IFNULL(?,password), new_password_token = ? WHERE email = ?",
-        [name, password, token, email]
-      );
-
-      const [rows] = await connectDB.query(
-        "SELECT * FROM psychologists WHERE email = ?",
-        [email]
-      );
-      res.json(rows[0]);
-    }
-  } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
-
-const checkToken = async (req, res) => {
-  const { token } = req.params;
-  // const validToken = await connectDB.query(
-  //   "SELECT * FROM psychologists WHERE new_password_token = ?",
-  //   [token]
-  // );
-
-  const result = await checkUserByToken(token);
-  if (result.length === 0) {
-    const error = new Error("Token no válido");
-    res.status(400).json({ message: error.message });
-  } else {
-    res.json({ msg: "Token válido y el usuario existe" });
-  }
-};
-
-const newPassword = async (req, res) => {
-  const { token } = req.params;
-  const newToken = null;
-  const { password } = req.body;
-
-  //Comprobar el token
-  const result = await checkUserByToken(token);
-  if (result.length === 0) {
-    const error = new Error("Token no válido");
-    res.status(400).json({ message: error.message });
-  }
-
-  if (password.length < 8) {
-    return res
-      .status(400)
-      .json({ error: "Password must be at least 8 characters long" });
-  }
-
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    await connectDB.query(
-      "UPDATE psychologists SET new_password_token = ?, password = ? WHERE new_password_token = ?",
-      [newToken, hashedPassword, token]
-    );
-    res.json({ message: "Password modificado de forma correcta" });
-  } catch (error) {
-    console.log(error);
-    res.json({ messa: error });
-  }
-};
-
-export {
-  register,
-  login,
-  forgetPassword,
-  checkToken,
-  newPassword,
-  getPsychologists,
+  // res.json({ url: "Ingresando psicólogo" });
 };
 
 /*const register = async (req, res) => {
@@ -270,3 +185,43 @@ export {
   }
 };
 */
+
+const changePassword = async (req, res) => {
+  // Validar la información del usuario
+  if (!req.body.email || !req.body.newPassword) {
+    return res
+      .status(400)
+      .json({ error: "Email and new password are required" });
+  }
+
+  if (req.body.newPassword.length < 8) {
+    return res
+      .status(400)
+      .json({ error: "New password must be at least 8 characters long" });
+  }
+
+  try {
+    // Verificar si existe un psicólogo con el correo electrónico proporcionado
+    const result = await connectDB.query(
+      "SELECT * FROM psychologists WHERE email = ?",
+      req.body.email
+    );
+
+    if (result[0].length === 0) {
+      res.status(404).json({ error: "Psychologist not found" });
+    } else {
+      const hashedPassword = await bcrypt.hash(req.body.newPassword, 10);
+
+      await connectDB.query(
+        "UPDATE psychologists SET password = ? WHERE email = ?",
+        [hashedPassword, req.body.email]
+      );
+      res.status(200).json({ message: "Password changed successfully" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export { register, login, changePassword, getPsychologists };
