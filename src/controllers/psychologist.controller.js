@@ -12,8 +12,9 @@ const checkUserByEmail = async (email) => {
 };
 
 const checkUserByToken = async (token) => {
+  
   const result = await connectDB.query(
-    "SELECT * FROM psychologists WHERE new_password_token = ?",
+    "SELECT * FROM psychologists WHERE token = ?",
     [token]
   );
 
@@ -22,7 +23,7 @@ const checkUserByToken = async (token) => {
 
 const register = async (req, res) => {
   const { name, email, password } = req.body;
-
+  const token = generateToken();
   // Validar la información del usuario
   if (!name || !email || !password) {
     return res.status(400).json({ error: "All fields are required" });
@@ -48,8 +49,8 @@ const register = async (req, res) => {
       const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
       const [rows] = await connectDB.query(
-        "INSERT INTO psychologists(name,email,password) VALUES (?, ?, ?)",
-        [name, email, hashedPassword]
+        "INSERT INTO psychologists(name,email,password,token) VALUES (?, ?, ?, ?)",
+        [name, email, hashedPassword,token]
       );
       res.status(201).json({
         message: "Psychologist registered successfully",
@@ -57,6 +58,7 @@ const register = async (req, res) => {
         name,
         email,
         hashedPassword,
+        token
       });
     }
   } catch (error) {
@@ -64,6 +66,26 @@ const register = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+const confirmAccount = async(req,res) => {
+
+  const { token } = req.params;
+  const result = await checkUserByToken(token);
+
+  if (result.length === 0) {
+    const error = new Error("Invalid Token");
+    return res.status(400).json({ msg: error.message });
+  } 
+
+  try {
+    connectDB.query("UPDATE psychologists SET token = ?, confirmed = ? WHERE token = ?",[null, 1, token]);
+
+    return res.status(200).json({msg:"Confirmed Account"});
+  } catch (error) {
+    return res.json({msg:error.message});
+
+  }
+}
 
 const getPsychologists = async (req, res) => {
   // prueba base de datos
@@ -119,15 +141,11 @@ const forgetPassword = async (req, res) => {
       const token = generateToken();
 
       const [result] = await connectDB.query(
-        "UPDATE psychologists SET name = IFNULL(?,name), password=IFNULL(?,password), new_password_token = ? WHERE email = ?",
-        [name, password, token, email]
+        "UPDATE psychologists SET token = ?, confirmed = ?, WHERE token = ?",
+        [null, 1, token]
       );
 
-      const [rows] = await connectDB.query(
-        "SELECT * FROM psychologists WHERE email = ?",
-        [email]
-      );
-      res.status(200).json({msg:"Validation email has been sent",user:rows[0]});
+      res.status(200).json({msg:"Validated account"});
     }
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
@@ -139,10 +157,10 @@ const checkToken = async (req, res) => {
 
   const result = await checkUserByToken(token);
   if (result.length === 0) {
-    const error = new Error("Token no válido");
+    const error = new Error("Invalid Token");
     res.status(400).json({ message: error.message });
   } else {
-    res.json({ msg: "Token válido y el usuario existe" });
+    res.json({ msg: "Valid Token" });
   }
 };
 
@@ -181,4 +199,5 @@ export {
   checkToken,
   newPassword,
   getPsychologists,
+  confirmAccount
 };
