@@ -21,6 +21,13 @@ const checkUserByToken = async (token) => {
   return result[0];
 };
 
+const checkUserConfirmation = async (email) => {
+  const result = await connectDB.query(
+    'SELECT * FROM psychologists WHERE email = ? and confirmed = ?',[email,1]
+  );
+  return result[0];
+}
+
 const register = async (req, res) => {
   const { name, email, password } = req.body;
   const token = generateToken();
@@ -100,17 +107,29 @@ const login = async (req, res) => {
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required" });
   }
+
+  //Comprobar si el email ingresado existe
+  const result = await checkUserByEmail(email);
+  if (result.length === 0) {
+    res.status(401).json({ error: "The account entered does not exist" });
+  }
+
+  //Comprobar si la cuenta ya está confirmada
+  const resultConfirmation = await checkUserConfirmation(email);
+  if(resultConfirmation.length === 0){
+    return res.status(401).json({ error: "Unconfirmed user" });
+  }
+
+  //Autenticar el usuario
   try {
-    const result = await checkUserByEmail(email);
-    if (result.length === 0) {
-      res.status(401).json({ error: "The account entered does not exist" });
-    } else {
       const isPasswordValid = await bcrypt.compare(
         password,
         result[0].password
       );
 
       if (isPasswordValid) {
+        //Autenticar el usuario
+        
         const token = jwt.sign({ id: result.id }, "your_jwt_secret", {
           expiresIn: "1h",
         });
@@ -118,12 +137,16 @@ const login = async (req, res) => {
       } else {
         res.status(401).json({ error: "Invalid password" });
       }
-    }
+    
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+const mainPanel = (req,res) => {
+  res.json({msg:'Mostrando Middleware'});
+}
 
 const forgetPassword = async (req, res) => {
   const { email,  } = req.body;
@@ -195,6 +218,7 @@ const newPassword = async (req, res) => {
 export {
   register,
   login,
+  mainPanel,
   forgetPassword,
   checkToken,
   newPassword,
