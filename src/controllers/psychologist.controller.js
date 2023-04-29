@@ -2,12 +2,14 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { connectDB } from "../config/db.js";
 import generateToken from "../helpers/generateToken.js";
+import confirmationEmail from "../helpers/confirmationEmail.js";
 
 const checkUserByEmail = async (email) => {
   const result = await connectDB.query(
     "SELECT * FROM psychologists WHERE email = ?",
     email
   );
+
   return result[0];
 };
 
@@ -59,6 +61,15 @@ const register = async (req, res) => {
         "INSERT INTO psychologists(name,email,password,token) VALUES (?, ?, ?, ?)",
         [name, email, hashedPassword,token]
       );
+
+
+
+        //Crear instancia de la creación del correo
+        const mailInformation = confirmationEmail({
+          name,email,token
+        });
+
+
       res.status(201).json({
         message: "Psychologist registered successfully",
         id: rows.insertId,
@@ -129,8 +140,7 @@ const login = async (req, res) => {
 
       if (isPasswordValid) {
         //Autenticar el usuario
-        
-        const token = jwt.sign({ id: result.id }, "your_jwt_secret", {
+        const token = jwt.sign({ id: result[0].id }, "your_jwt_secret", {
           expiresIn: "1h",
         });
         res.status(200).json({ token });
@@ -144,8 +154,9 @@ const login = async (req, res) => {
   }
 };
 
-const mainPanel = (req,res) => {
-  res.json({msg:'Mostrando Middleware'});
+const profile = (req,res) => {
+  const {body} = req
+  res.json({profile:body});
 }
 
 const forgetPassword = async (req, res) => {
@@ -218,7 +229,7 @@ const newPassword = async (req, res) => {
 export {
   register,
   login,
-  mainPanel,
+  profile,
   forgetPassword,
   checkToken,
   newPassword,

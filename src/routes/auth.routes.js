@@ -2,7 +2,7 @@ import express from "express";
 import {
   register,
   login,
-  mainPanel,
+  profile,
   forgetPassword,
   checkToken,
   newPassword,
@@ -22,7 +22,7 @@ router.patch("/change-password/", forgetPassword);
 router.route("/change-password/:token").get(checkToken).post(newPassword);
 
 //Se requiere cuenta para mostrar estas páginas
-router.get("/main-panel", authentication, mainPanel);
+router.get("/profile", authentication, profile);
 router.get("/get-psychologists", getPsychologists);
 
 
