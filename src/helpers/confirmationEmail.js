@@ -22,7 +22,11 @@ const confirmationEmail = async (data) => {
     html:`
         <p>Buen día ${name}, comprueba tu cuenta para la gestión de pacientes.</p>
         <p>Tu cuenta ya se encuentra lista, ahora el último paso es confirmarla mediante el siguiente enlace:
-        <a href="${process.env.FRONTEND_URL}/confirm-account/${token}"></a>
+        </p>
+        <p>
+        </p>
+        <p>
+        <a href="${process.env.FRONTEND_URL}/confirm-account/${token}">Comprobar cuenta</a>
         </p>
         <p>Si no has creado esta cuenta, te pedimos que ignores este mensaje</p>`,
   });
