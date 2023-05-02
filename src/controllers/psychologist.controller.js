@@ -14,7 +14,6 @@ const checkUserByEmail = async (email) => {
 };
 
 const checkUserByToken = async (token) => {
-  
   const result = await connectDB.query(
     "SELECT * FROM psychologists WHERE token = ?",
     [token]
@@ -25,10 +24,11 @@ const checkUserByToken = async (token) => {
 
 const checkUserConfirmation = async (email) => {
   const result = await connectDB.query(
-    'SELECT * FROM psychologists WHERE email = ? and confirmed = ?',[email,1]
+    "SELECT * FROM psychologists WHERE email = ? and confirmed = ?",
+    [email, 1]
   );
   return result[0];
-}
+};
 
 const register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -48,7 +48,7 @@ const register = async (req, res) => {
   }
 
   try {
-    const result =  await checkUserByEmail(email);
+    const result = await checkUserByEmail(email);
 
     if (result.length > 0) {
       res
@@ -59,16 +59,15 @@ const register = async (req, res) => {
 
       const [rows] = await connectDB.query(
         "INSERT INTO psychologists(name,email,password,token) VALUES (?, ?, ?, ?)",
-        [name, email, hashedPassword,token]
+        [name, email, hashedPassword, token]
       );
 
-
-
-        //Crear instancia de la creación del correo
-        const mailInformation = confirmationEmail({
-          name,email,token
-        });
-
+      //Crear instancia de la creación del correo
+      const mailInformation = confirmationEmail({
+        name,
+        email,
+        token,
+      });
 
       res.status(201).json({
         message: "Psychologist registered successfully",
@@ -76,7 +75,7 @@ const register = async (req, res) => {
         name,
         email,
         hashedPassword,
-        token
+        token,
       });
     }
   } catch (error) {
@@ -85,25 +84,26 @@ const register = async (req, res) => {
   }
 };
 
-const confirmAccount = async(req,res) => {
-
+const confirmAccount = async (req, res) => {
   const { token } = req.params;
   const result = await checkUserByToken(token);
 
   if (result.length === 0) {
     const error = new Error("Invalid Token");
     return res.status(400).json({ msg: error.message });
-  } 
+  }
 
   try {
-    connectDB.query("UPDATE psychologists SET token = ?, confirmed = ? WHERE token = ?",[null, 1, token]);
+    connectDB.query(
+      "UPDATE psychologists SET token = ?, confirmed = ? WHERE token = ?",
+      [null, 1, token]
+    );
 
-    return res.status(200).json({msg:"Confirmed Account"});
+    return res.status(200).json({ msg: "Confirmed Account" });
   } catch (error) {
-    return res.json({msg:error.message});
-
+    return res.json({ msg: error.message });
   }
-}
+};
 
 const getPsychologists = async (req, res) => {
   // prueba base de datos
@@ -127,40 +127,36 @@ const login = async (req, res) => {
 
   //Comprobar si la cuenta ya está confirmada
   const resultConfirmation = await checkUserConfirmation(email);
-  if(resultConfirmation.length === 0){
+  if (resultConfirmation.length === 0) {
     return res.status(401).json({ error: "Unconfirmed user" });
   }
 
   //Autenticar el usuario
   try {
-      const isPasswordValid = await bcrypt.compare(
-        password,
-        result[0].password
-      );
+    const isPasswordValid = await bcrypt.compare(password, result[0].password);
 
-      if (isPasswordValid) {
-        //Autenticar el usuario
-        const token = jwt.sign({ id: result[0].id }, "your_jwt_secret", {
-          expiresIn: "1h",
-        });
-        res.status(200).json({ token });
-      } else {
-        res.status(401).json({ error: "Invalid password" });
-      }
-    
+    if (isPasswordValid) {
+      //Autenticar el usuario
+      const token = jwt.sign({ id: result[0].id }, "your_jwt_secret", {
+        expiresIn: "1h",
+      });
+      res.status(200).json({ token });
+    } else {
+      res.status(401).json({ error: "Invalid password" });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
-const profile = (req,res) => {
-  const {body} = req
-  res.json({profile:body});
-}
+const profile = (req, res) => {
+  const { body } = req;
+  res.json({ profile: body });
+};
 
 const forgetPassword = async (req, res) => {
-  const { email,  } = req.body;
+  const { email } = req.body;
   const name = null;
   const password = null;
   //Verificar la existencia de un usuario con determinado email
@@ -179,7 +175,7 @@ const forgetPassword = async (req, res) => {
         [null, 1, token]
       );
 
-      res.status(200).json({msg:"Validated account"});
+      res.status(200).json({ msg: "Validated account" });
     }
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
@@ -211,7 +207,9 @@ const newPassword = async (req, res) => {
   }
 
   if (password.length < 8) {
-    return res.status(400).json({ error: "Password must be at least 8 characters long" });
+    return res
+      .status(400)
+      .json({ error: "Password must be at least 8 characters long" });
   }
 
   try {
@@ -226,6 +224,25 @@ const newPassword = async (req, res) => {
   }
 };
 
+const getPatients = async (req, res) => {
+  try {
+    const result = await connectDB.query("SELECT * FROM patients");
+    res.json(result[0]);
+  } catch (error) {
+    console.error("Error al obtener los pacientes:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+const getAppointments = async (req, res) => {
+  try {
+    const result = await connectDB.query("SELECT * FROM appointments");
+    res.json(result[0]);
+  } catch (error) {
+    console.error("Error al obtener las citas:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 export {
   register,
   login,
@@ -234,5 +251,7 @@ export {
   checkToken,
   newPassword,
   getPsychologists,
-  confirmAccount
+  confirmAccount,
+  getPatients,
+  getAppointments,
 };
