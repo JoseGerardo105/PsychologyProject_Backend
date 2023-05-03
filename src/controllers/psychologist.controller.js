@@ -283,6 +283,38 @@ const createAppointment = async (req, res) => {
   }
 };
 
+const updateAppointment = async (req, res) => {
+  const { eventId } = req.params;
+  const { start_time, end_time, status, notes, price_cop } = req.body;
+
+  const mysqlStartTime = new Date(start_time)
+    .toISOString()
+    .replace("T", " ")
+    .slice(0, 19);
+  const mysqlEndTime = new Date(end_time)
+    .toISOString()
+    .replace("T", " ")
+    .slice(0, 19);
+
+  try {
+    await connectDB.query(
+      "UPDATE appointments SET start_time = ?, end_time = ?, status = ?, notes = ?, price_cop = ? WHERE id = ?",
+      [mysqlStartTime, mysqlEndTime, status, notes, price_cop, eventId]
+    );
+    res.status(200).json({
+      message: "Appointment updated successfully",
+      start_time: mysqlStartTime,
+      end_time: mysqlEndTime,
+      status,
+      notes,
+      price_cop,
+    });
+  } catch (error) {
+    console.error("Error al actualizar la cita:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 export {
   register,
   login,
@@ -294,5 +326,6 @@ export {
   confirmAccount,
   getPatients,
   getAppointments,
+  updateAppointment,
   createAppointment,
 };

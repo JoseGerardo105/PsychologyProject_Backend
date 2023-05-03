@@ -11,6 +11,7 @@ import {
   getPatients,
   getAppointments,
   createAppointment,
+  updateAppointment,
 } from "../controllers/psychologist.controller.js";
 import authentication from "../middleware/authenticate.middleware.js";
 
@@ -29,6 +30,7 @@ router.get("/get-psychologists", getPsychologists);
 
 router.get("/get-appointments", getAppointments);
 router.post("/create-appointment", createAppointment);
+router.patch("/update-appointment/:eventId", updateAppointment);
 
 router.get("/get-patients", getPatients);
 
