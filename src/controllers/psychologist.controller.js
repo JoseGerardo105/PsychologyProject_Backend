@@ -243,6 +243,46 @@ const getAppointments = async (req, res) => {
   }
 };
 
+const createAppointment = async (req, res) => {
+  const {
+    patient_id,
+    psychologist_id,
+    start_time,
+    end_time,
+    status,
+    notes,
+    price_cop,
+  } = req.body;
+  try {
+    const [result] = await connectDB.query(
+      "INSERT INTO appointments(patient_id, psychologist_id, start_time, end_time, status, notes, price_cop) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [
+        patient_id,
+        psychologist_id,
+        start_time,
+        end_time,
+        status,
+        notes,
+        price_cop,
+      ]
+    );
+    res.status(201).json({
+      message: "Appointment created successfully",
+      id: result.insertId,
+      patient_id,
+      psychologist_id,
+      start_time,
+      end_time,
+      status,
+      notes,
+      price_cop,
+    });
+  } catch (error) {
+    console.error("Error al crear la cita:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 export {
   register,
   login,
@@ -254,4 +294,5 @@ export {
   confirmAccount,
   getPatients,
   getAppointments,
+  createAppointment,
 };
