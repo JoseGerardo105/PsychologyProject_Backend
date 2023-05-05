@@ -233,6 +233,29 @@ const getPatients = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+const createPatient = async (req, res) => {
+  const { nombre, tipodoc, documento, email, telefono, direccion } = req.body;
+  try {
+    const [result] = await connectDB.query(
+      "INSERT INTO patients(name, document_type_id, document_number, email, phone, address) VALUES (?, ?, ?, ?, ?, ?)",
+      [nombre, tipodoc, documento, email, telefono, direccion]
+    );
+    res.status(201).json({
+      message: "Paciente creado correctamente",
+      id: result.insertId,
+      nombre,
+      tipodoc,
+      documento,
+      email,
+      telefono,
+      direccion,
+    });
+  } catch (error) {
+    console.error("Error al crear el paciente:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 const getAppointments = async (req, res) => {
   try {
     const result = await connectDB.query("SELECT * FROM appointments");
@@ -315,6 +338,164 @@ const updateAppointment = async (req, res) => {
   }
 };
 
+const deleteAppointment = async (req, res) => {
+  const { eventId } = req.params;
+
+  try {
+    await connectDB.query("DELETE FROM appointments WHERE id = ?", [eventId]);
+    res.status(200).json({ message: "Appointment deleted successfully" });
+  } catch (error) {
+    console.error("Error al eliminar la cita:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const updateAppointmentForm = async (req, res) => {
+  const { eventId } = req.params;
+  const { start_time, end_time, status, notes, price_cop } = req.body;
+
+  const mysqlStartTime = new Date(start_time)
+    .toISOString()
+    .replace("T", " ")
+    .slice(0, 19);
+  const mysqlEndTime = new Date(end_time)
+    .toISOString()
+    .replace("T", " ")
+    .slice(0, 19);
+
+  try {
+    await connectDB.query(
+      "UPDATE appointments SET start_time = ?, end_time = ?, status = ?, notes = ?, price_cop = ? WHERE id = ?",
+      [mysqlStartTime, mysqlEndTime, status, notes, price_cop, eventId]
+    );
+    res.status(200).json({
+      message: "Appointment updated successfully",
+      start_time: mysqlStartTime,
+      end_time: mysqlEndTime,
+      status,
+      notes,
+      price_cop,
+    });
+  } catch (error) {
+    console.error("Error al actualizar la cita:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Obtener registros médicos
+const getMedicalRecords = async (req, res) => {
+  try {
+    const result = await connectDB.query("SELECT * FROM medical_records");
+    res.json(result[0]);
+  } catch (error) {
+    console.error("Error al obtener los registros médicos:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Crear un registro médico
+const createMedicalRecord = async (req, res) => {
+  const {
+    patient_id,
+    name,
+    gender,
+    marital_status,
+    medical_history,
+    psychological_history,
+    treatment_plan,
+    observations,
+    document_number,
+    date_of_birth,
+  } = req.body;
+
+  try {
+    const [result] = await connectDB.query(
+      "INSERT INTO medical_records(patient_id, name, gender, marital_status, medical_history, psychological_history, treatment_plan, observations, document_number, date_of_birth) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        patient_id,
+        name,
+        gender,
+        marital_status,
+        medical_history,
+        psychological_history,
+        treatment_plan,
+        observations,
+        document_number,
+        date_of_birth,
+      ]
+    );
+    res.status(201).json({
+      message: "Medical record created successfully",
+      id: result.insertId,
+      patient_id,
+      name,
+      gender,
+      marital_status,
+      medical_history,
+      psychological_history,
+      treatment_plan,
+      observations,
+      document_number,
+      date_of_birth,
+    });
+  } catch (error) {
+    console.error("Error al crear el registro médico:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Actualizar un registro médico
+const updateMedicalRecord = async (req, res) => {
+  const { recordId } = req.params;
+  const {
+    patient_id,
+    name,
+    gender,
+    marital_status,
+    medical_history,
+    psychological_history,
+    treatment_plan,
+    observations,
+    document_number,
+    date_of_birth,
+  } = req.body;
+
+  try {
+    await connectDB.query(
+      "UPDATE medical_records SET patient_id = ?, name = ?, gender = ?, marital_status = ?, medical_history = ?, psychological_history = ?, treatment_plan = ?, observations = ?, document_number = ?, date_of_birth = ? WHERE id = ?",
+      [
+        patient_id,
+        name,
+        gender,
+        marital_status,
+        medical_history,
+        psychological_history,
+        treatment_plan,
+        observations,
+        document_number,
+        date_of_birth,
+        recordId,
+      ]
+    );
+    res.status(200).json({
+      message: "Medical record updated successfully",
+      patient_id,
+      name,
+      gender,
+      marital_status,
+      medical_history,
+      psychological_history,
+      treatment_plan,
+      observations,
+      document_number,
+      date_of_birth,
+    });
+  } catch (error) {
+    console.error("Error al actualizar el registro médico:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 export {
   register,
   login,
@@ -325,7 +506,13 @@ export {
   getPsychologists,
   confirmAccount,
   getPatients,
+  createPatient,
   getAppointments,
   updateAppointment,
+  updateAppointmentForm,
+  deleteAppointment,
   createAppointment,
+  getMedicalRecords,
+  createMedicalRecord,
+  updateMedicalRecord,
 };

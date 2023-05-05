@@ -9,9 +9,14 @@ import {
   getPsychologists,
   confirmAccount,
   getPatients,
+  createPatient,
   getAppointments,
   createAppointment,
   updateAppointment,
+  deleteAppointment,
+  getMedicalRecords,
+  createMedicalRecord,
+  updateMedicalRecord,
 } from "../controllers/psychologist.controller.js";
 import authentication from "../middleware/authenticate.middleware.js";
 
@@ -30,8 +35,15 @@ router.get("/get-psychologists", getPsychologists);
 
 router.get("/get-appointments", getAppointments);
 router.post("/create-appointment", createAppointment);
+router.delete("/delete-appointment/:eventId", deleteAppointment);
 router.patch("/update-appointment/:eventId", updateAppointment);
+router.patch("/update-appointment-form/:eventId", updateAppointment);
 
 router.get("/get-patients", getPatients);
+router.post("/create-patients", createPatient);
+
+router.get("/get-medical-records", getMedicalRecords);
+router.post("/create-medical-records", createMedicalRecord);
+router.patch("/update-medical-records/:recordId", updateMedicalRecord);
 
 export default router;
