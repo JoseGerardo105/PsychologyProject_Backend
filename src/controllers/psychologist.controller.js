@@ -397,23 +397,23 @@ const getMedicalRecords = async (req, res) => {
 const createMedicalRecord = async (req, res) => {
   const {
     patient_id,
-    name,
+    ocupation,
+    document_number,
+    date_of_birth,
     gender,
     marital_status,
     medical_history,
     psychological_history,
     treatment_plan,
     observations,
-    document_number,
-    date_of_birth,
   } = req.body;
-
   try {
+    console.log("Datos recibidos en el servidor", req.body);
     const [result] = await connectDB.query(
-      "INSERT INTO medical_records(patient_id, name, gender, marital_status, medical_history, psychological_history, treatment_plan, observations, document_number, date_of_birth) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO medical_records(patient_id,ocupation, gender, marital_status, medical_history, psychological_history, treatment_plan, observations, document_number, date_of_birth) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?)",
       [
         patient_id,
-        name,
+        ocupation,
         gender,
         marital_status,
         medical_history,
@@ -428,7 +428,7 @@ const createMedicalRecord = async (req, res) => {
       message: "Medical record created successfully",
       id: result.insertId,
       patient_id,
-      name,
+      ocupation,
       gender,
       marital_status,
       medical_history,
@@ -449,23 +449,22 @@ const updateMedicalRecord = async (req, res) => {
   const { recordId } = req.params;
   const {
     patient_id,
-    name,
+    document_number,
+    date_of_birth,
+    ocupation,
     gender,
     marital_status,
     medical_history,
     psychological_history,
     treatment_plan,
     observations,
-    document_number,
-    date_of_birth,
   } = req.body;
 
   try {
     await connectDB.query(
-      "UPDATE medical_records SET patient_id = ?, name = ?, gender = ?, marital_status = ?, medical_history = ?, psychological_history = ?, treatment_plan = ?, observations = ?, document_number = ?, date_of_birth = ? WHERE id = ?",
+      "UPDATE medical_records SET patient_id = ?, gender = ?, marital_status = ?, medical_history = ?, psychological_history = ?, treatment_plan = ?, observations = ?, document_number = ?, date_of_birth = ? WHERE id = ?",
       [
         patient_id,
-        name,
         gender,
         marital_status,
         medical_history,
@@ -480,7 +479,6 @@ const updateMedicalRecord = async (req, res) => {
     res.status(200).json({
       message: "Medical record updated successfully",
       patient_id,
-      name,
       gender,
       marital_status,
       medical_history,
