@@ -2,13 +2,16 @@ import nodemailer from "nodemailer";
 // import dotenv from "dotenv";
 
 const confirmationEmail = async (data) => {
+  
   const transporter = nodemailer.createTransport({
     host: process.env.HOST_EMAIL,
     port: process.env.PORT_EMAIL,
+    sequre: true,
     auth: {
       user: process.env.USER_EMAIL,
       pass: process.env.PASSWORD_EMAIL,
     },
+
   });
 
   //Enviar correo de confirmación de cuenta

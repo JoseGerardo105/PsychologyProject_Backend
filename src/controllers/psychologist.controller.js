@@ -35,7 +35,7 @@ const register = async (req, res) => {
   const token = generateToken();
   // Validar la información del usuario
   if (!name || !email || !password) {
-    return res.status(400).json({ error: "All fields are required" });
+    return res.status(400).json({ error: "Todos los campos son obligatorios" });
   }
   const emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
   if (!emailRegex.test(email)) {
@@ -44,7 +44,7 @@ const register = async (req, res) => {
   if (password.length < 8) {
     return res
       .status(400)
-      .json({ error: "Password must be at least 8 characters long" });
+      .json({ error: "La contraseña requiere un mínimo de 8 caracteres" });
   }
 
   try {
@@ -53,7 +53,7 @@ const register = async (req, res) => {
     if (result.length > 0) {
       res
         .status(409)
-        .json({ error: "A psychologist with this email already exists" });
+        .json({ error: "Ya existe una cuenta asociada al correo ingresado" });
     } else {
       const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
@@ -70,7 +70,7 @@ const register = async (req, res) => {
       });
 
       res.status(201).json({
-        message: "Psychologist registered successfully",
+        message: "Psicólogo registrado correctamente",
         id: rows.insertId,
         name,
         email,
@@ -89,7 +89,7 @@ const confirmAccount = async (req, res) => {
   const result = await checkUserByToken(token);
 
   if (result.length === 0) {
-    const error = new Error("Invalid Token");
+    const error = new Error("Token inválido");
     return res.status(400).json({ msg: error.message });
   }
 
@@ -99,7 +99,7 @@ const confirmAccount = async (req, res) => {
       [null, 1, token]
     );
 
-    return res.status(200).json({ msg: "Confirmed Account" });
+    return res.status(200).json({ msg: "Cuenta confirmada" });
   } catch (error) {
     return res.json({ msg: error.message });
   }
@@ -116,19 +116,19 @@ const login = async (req, res) => {
 
   // Validar la información del usuario
   if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required" });
+    return res.status(400).json({ error: "Se requiere email y contraseña" });
   }
 
   //Comprobar si el email ingresado existe
   const result = await checkUserByEmail(email);
   if (result.length === 0) {
-    res.status(401).json({ error: "The account entered does not exist" });
+    res.status(401).json({ error: "La cuenta con la dirección email ingresada no existe" });
   }
 
   //Comprobar si la cuenta ya está confirmada
   const resultConfirmation = await checkUserConfirmation(email);
   if (resultConfirmation.length === 0) {
-    return res.status(401).json({ error: "Unconfirmed user" });
+    return res.status(401).json({ error: "Usuario aún no confirmado" });
   }
 
   //Autenticar el usuario
@@ -142,7 +142,7 @@ const login = async (req, res) => {
       });
       res.status(200).json({ token });
     } else {
-      res.status(401).json({ error: "Invalid password" });
+      res.status(401).json({ error: "Contraseña incorrecta" });
     }
   } catch (error) {
     console.log(error);
@@ -157,28 +157,24 @@ const profile = (req, res) => {
 
 const forgetPassword = async (req, res) => {
   const { email } = req.body;
-  const name = null;
-  const password = null;
   //Verificar la existencia de un usuario con determinado email
   try {
     const result = await checkUserByEmail(email);
-
     if (result.length === 0) {
       const error = new Error("El usuario no existe");
       res.status(404).json({ msg: error.message });
     } else {
       //Si el usuario existe generamos un Token que se envía al correo
       const token = generateToken();
-
-      const [result] = await connectDB.query(
-        "UPDATE psychologists SET token = ?, confirmed = ?, WHERE token = ?",
-        [null, 1, token]
+      await connectDB.query(
+        "UPDATE psychologists SET token = ? WHERE id = ?",
+        [token, result[0].id]
       );
 
-      res.status(200).json({ msg: "Validated account" });
+      res.status(200).json({ msg: "Se ha enviado un correo para reestablecer cuenta" });
     }
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Error del servidor" });
   }
 };
 
@@ -187,10 +183,10 @@ const checkToken = async (req, res) => {
 
   const result = await checkUserByToken(token);
   if (result.length === 0) {
-    const error = new Error("Invalid Token");
+    const error = new Error("Token inválido");
     res.status(400).json({ message: error.message });
   } else {
-    res.json({ msg: "Valid Token" });
+    res.json({ msg: "Token válido" });
   }
 };
 
@@ -202,25 +198,25 @@ const newPassword = async (req, res) => {
   //Comprobar el token
   const result = await checkUserByToken(token);
   if (result.length === 0) {
-    const error = new Error("Invalid Token");
+    const error = new Error("Token inválido");
     return res.status(400).json({ message: error.message });
   }
 
   if (password.length < 8) {
     return res
       .status(400)
-      .json({ error: "Password must be at least 8 characters long" });
+      .json({ error: "La contraseña requiere un mínimo de 8 caracteres" });
   }
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     await connectDB.query(
-      "UPDATE psychologists SET new_password_token = ?, password = ? WHERE new_password_token = ?",
+      "UPDATE psychologists SET token = ?, password = ? WHERE token = ?",
       [newToken, hashedPassword, token]
     );
-    res.json({ message: "Password has been changed" });
+    res.json({ message: "Contraseña cambiada correctamente" });
   } catch (error) {
-    res.json(error.message);
+    res.status(401).json({ error: "Error al cambiar la contraseña" });
   }
 };
 
@@ -229,8 +225,7 @@ const getPatients = async (req, res) => {
     const result = await connectDB.query("SELECT * FROM patients");
     res.json(result[0]);
   } catch (error) {
-    console.error("Error al obtener los pacientes:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Error al obtener pacientes" });
   }
 };
 const createPatient = async (req, res) => {
