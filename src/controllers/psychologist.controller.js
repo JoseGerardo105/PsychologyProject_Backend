@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { connectDB } from "../config/db.js";
 import generateToken from "../helpers/generateToken.js";
 import confirmationEmail from "../helpers/confirmationEmail.js";
+import forgetPasswordEmail from "../helpers/forgetPasswordEmail.js";
 
 const checkUserByEmail = async (email) => {
   const result = await connectDB.query(
@@ -162,7 +163,7 @@ const forgetPassword = async (req, res) => {
     const result = await checkUserByEmail(email);
     if (result.length === 0) {
       const error = new Error("El usuario no existe");
-      res.status(404).json({ msg: error.message });
+      res.status(404).json({ error: error.message });
     } else {
       //Si el usuario existe generamos un Token que se envía al correo
       const token = generateToken();
@@ -171,6 +172,7 @@ const forgetPassword = async (req, res) => {
         [token, result[0].id]
       );
 
+      forgetPasswordEmail({name:result[0].name,email,token});
       res.status(200).json({ msg: "Se ha enviado un correo para reestablecer cuenta" });
     }
   } catch (error) {
