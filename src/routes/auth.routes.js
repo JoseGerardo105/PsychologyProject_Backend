@@ -9,6 +9,7 @@ import {
   getPsychologists,
   confirmAccount,
   getPatients,
+  getPatientId,
   createPatient,
   getAppointments,
   createAppointment,
@@ -40,6 +41,7 @@ router.patch("/update-appointment/:eventId", updateAppointment);
 router.patch("/update-appointment-form/:eventId", updateAppointment);
 
 router.get("/get-patients", getPatients);
+router.get("/get-patient/:patientId", getPatientId);
 router.post("/create-patients", createPatient);
 
 router.get("/get-medical-records", getMedicalRecords);

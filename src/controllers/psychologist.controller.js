@@ -123,7 +123,9 @@ const login = async (req, res) => {
   //Comprobar si el email ingresado existe
   const result = await checkUserByEmail(email);
   if (result.length === 0) {
-    res.status(401).json({ error: "La cuenta con la dirección email ingresada no existe" });
+    res
+      .status(401)
+      .json({ error: "La cuenta con la dirección email ingresada no existe" });
   }
 
   //Comprobar si la cuenta ya está confirmada
@@ -167,13 +169,15 @@ const forgetPassword = async (req, res) => {
     } else {
       //Si el usuario existe generamos un Token que se envía al correo
       const token = generateToken();
-      await connectDB.query(
-        "UPDATE psychologists SET token = ? WHERE id = ?",
-        [token, result[0].id]
-      );
+      await connectDB.query("UPDATE psychologists SET token = ? WHERE id = ?", [
+        token,
+        result[0].id,
+      ]);
 
-      forgetPasswordEmail({name:result[0].name,email,token});
-      res.status(200).json({ msg: "Se ha enviado un correo para reestablecer cuenta" });
+      forgetPasswordEmail({ name: result[0].name, email, token });
+      res
+        .status(200)
+        .json({ msg: "Se ha enviado un correo para reestablecer cuenta" });
     }
   } catch (error) {
     res.status(500).json({ error: "Error del servidor" });
@@ -230,6 +234,38 @@ const getPatients = async (req, res) => {
     res.status(500).json({ error: "Error al obtener pacientes" });
   }
 };
+const getPatientId = async (req, res) => {
+  try {
+    const patientId = req.params.patientId;
+    console.log("Obteniendo información del paciente con ID:", patientId);
+
+    const result = await connectDB.query(
+      "SELECT * FROM patients WHERE id = ?",
+      [patientId]
+    );
+
+    console.log("Resultado de la consulta a la base de datos:", result[0]);
+
+    if (result[0].length > 0) {
+      const patient = result[0][0];
+      res.json({
+        id: patient.id,
+        name: patient.name,
+        document_type_id: patient.tipodoc,
+        document_number: patient.documento,
+        email: patient.email,
+        phone: patient.telefono,
+        address: patient.direccion,
+      });
+    } else {
+      res.status(404).json({ error: "Paciente no encontrado" });
+    }
+  } catch (error) {
+    console.error("Error al obtener el paciente:", error);
+    res.status(500).json({ error: "Error al obtener pacientes" });
+  }
+};
+
 const createPatient = async (req, res) => {
   const { nombre, tipodoc, documento, email, telefono, direccion } = req.body;
   try {
@@ -501,6 +537,7 @@ export {
   getPsychologists,
   confirmAccount,
   getPatients,
+  getPatientId,
   createPatient,
   getAppointments,
   updateAppointment,
