@@ -80,7 +80,6 @@ const register = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log(error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -148,7 +147,6 @@ const login = async (req, res) => {
       res.status(401).json({ error: "Contraseña incorrecta" });
     }
   } catch (error) {
-    console.log(error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -234,17 +232,16 @@ const getPatients = async (req, res) => {
     res.status(500).json({ error: "Error al obtener pacientes" });
   }
 };
+
+//Obtiene un paciente
 const getPatientId = async (req, res) => {
   try {
     const patientId = req.params.patientId;
-    console.log("Obteniendo información del paciente con ID:", patientId);
 
     const result = await connectDB.query(
       "SELECT * FROM patients WHERE id = ?",
       [patientId]
     );
-
-    console.log("Resultado de la consulta a la base de datos:", result[0]);
 
     if (result[0].length > 0) {
       const patient = result[0][0];
@@ -261,8 +258,39 @@ const getPatientId = async (req, res) => {
       res.status(404).json({ error: "Paciente no encontrado" });
     }
   } catch (error) {
-    console.error("Error al obtener el paciente:", error);
     res.status(500).json({ error: "Error al obtener pacientes" });
+  }
+};
+
+//Obtiene una historia medica
+const getMedicalRecordId = async (req, res) => {
+  try {
+    const medicalRecordId = req.params.medicalRecordId;
+
+    const result = await connectDB.query(
+      "SELECT * FROM medical_records WHERE id = ?",
+      [medicalRecordId]
+    );
+
+    if (result[0].length > 0) {
+      const medical_record = result[0][0];
+      res.json({
+        id: medical_record.id,
+        patientid: medical_record.patient_id,
+        ocupation: medical_record.ocupation,
+        gender: medical_record.gender,
+        marital_status: medical_record.marital_status,
+        psychological_history: medical_record.psychological_history,
+        treatment_plan: medical_record.treatment_plan,
+        observations: medical_record.observations,
+        document_number: medical_record.document_number,
+        date_of_birth: medical_record.date_of_birth
+      });
+    } else {
+      res.status(404).json({ error: "Historia no encontrada" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener historia" });
   }
 };
 
@@ -284,7 +312,6 @@ const createPatient = async (req, res) => {
       direccion,
     });
   } catch (error) {
-    console.error("Error al crear el paciente:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -294,7 +321,6 @@ const getAppointments = async (req, res) => {
     const result = await connectDB.query("SELECT * FROM appointments");
     res.json(result[0]);
   } catch (error) {
-    console.error("Error al obtener las citas:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -334,7 +360,6 @@ const createAppointment = async (req, res) => {
       price_cop,
     });
   } catch (error) {
-    console.error("Error al crear la cita:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -366,19 +391,38 @@ const updateAppointment = async (req, res) => {
       price_cop,
     });
   } catch (error) {
-    console.error("Error al actualizar la cita:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
 const deleteAppointment = async (req, res) => {
   const { eventId } = req.params;
-
   try {
     await connectDB.query("DELETE FROM appointments WHERE id = ?", [eventId]);
     res.status(200).json({ message: "Appointment deleted successfully" });
   } catch (error) {
-    console.error("Error al eliminar la cita:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+//Eliminar paciente
+const deletePatient = async (req, res) => {
+  const { patientId } = req.params;
+  try {
+    await connectDB.query("DELETE FROM patients WHERE id = ?", [patientId]);
+    res.status(200).json({ message: "Patient deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+//Eliminar historia
+const deleteMedicalRecord = async (req, res) => {
+  const { medicalRecordId } = req.params;
+  try {
+    await connectDB.query("DELETE FROM medical_records WHERE id = ?", [medicalRecordId]);
+    res.status(200).json({ message: "Medical record deleted successfully" });
+  } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -410,7 +454,6 @@ const updateAppointmentForm = async (req, res) => {
       price_cop,
     });
   } catch (error) {
-    console.error("Error al actualizar la cita:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -421,7 +464,6 @@ const getMedicalRecords = async (req, res) => {
     const result = await connectDB.query("SELECT * FROM medical_records");
     res.json(result[0]);
   } catch (error) {
-    console.error("Error al obtener los registros médicos:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -441,7 +483,6 @@ const createMedicalRecord = async (req, res) => {
     observations,
   } = req.body;
   try {
-    console.log("Datos recibidos en el servidor", req.body);
     const [result] = await connectDB.query(
       "INSERT INTO medical_records(patient_id,ocupation, gender, marital_status, medical_history, psychological_history, treatment_plan, observations, document_number, date_of_birth) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?)",
       [
@@ -472,7 +513,6 @@ const createMedicalRecord = async (req, res) => {
       date_of_birth,
     });
   } catch (error) {
-    console.error("Error al crear el registro médico:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -522,7 +562,6 @@ const updateMedicalRecord = async (req, res) => {
       date_of_birth,
     });
   } catch (error) {
-    console.error("Error al actualizar el registro médico:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -547,4 +586,7 @@ export {
   getMedicalRecords,
   createMedicalRecord,
   updateMedicalRecord,
+  deleteMedicalRecord,
+  deletePatient,
+  getMedicalRecordId
 };
