@@ -4,11 +4,30 @@ import { connectDB } from "../config/db.js";
 import generateToken from "../helpers/generateToken.js";
 import confirmationEmail from "../helpers/confirmationEmail.js";
 import forgetPasswordEmail from "../helpers/forgetPasswordEmail.js";
+import appointmenteCreationEmail from "../helpers/appointmentCreationEmail.js";
 
 const checkUserByEmail = async (email) => {
   const result = await connectDB.query(
     "SELECT * FROM psychologists WHERE email = ?",
     email
+  );
+
+  return result[0];
+};
+
+const checkPsychologistById = async (id) => {
+  const result = await connectDB.query(
+    "SELECT * FROM psychologists WHERE id = ?",
+    id
+  );
+
+  return result[0];
+};
+
+const checkPatientById = async (id) => {
+  const result = await connectDB.query(
+    "SELECT * FROM patients WHERE id = ?",
+    id
   );
 
   return result[0];
@@ -284,7 +303,7 @@ const getMedicalRecordId = async (req, res) => {
         treatment_plan: medical_record.treatment_plan,
         observations: medical_record.observations,
         document_number: medical_record.document_number,
-        date_of_birth: medical_record.date_of_birth
+        date_of_birth: medical_record.date_of_birth,
       });
     } else {
       res.status(404).json({ error: "Historia no encontrada" });
@@ -348,6 +367,33 @@ const createAppointment = async (req, res) => {
         price_cop,
       ]
     );
+
+
+
+    //Buscar psicólogo
+    const psycgologist = await checkPsychologistById(psychologist_id);
+
+    //Buscar paciente
+    const patient = await checkPatientById(patient_id);
+
+    //Crear instancia de la creación del correo
+    const mailInformationPatient = appointmenteCreationEmail({
+      psychologistName: psycgologist[0].name,
+      patientName: patient[0].name,
+      startDateAndTime: start_time,
+      finishDateAndTime: end_time,
+      email: patient[0].email
+    });
+
+
+    const mailInformationPsychologist = appointmenteCreationEmail({
+      psychologistName: psycgologist[0].name,
+      patientName: patient[0].name,
+      startDateAndTime: start_time,
+      finishDateAndTime: end_time,
+      email: psycgologist[0].email
+    });
+
     res.status(201).json({
       message: "Appointment created successfully",
       id: result.insertId,
@@ -382,6 +428,22 @@ const updateAppointment = async (req, res) => {
       "UPDATE appointments SET start_time = ?, end_time = ?, status = ?, notes = ?, price_cop = ? WHERE id = ?",
       [mysqlStartTime, mysqlEndTime, status, notes, price_cop, eventId]
     );
+
+    //Buscar psicólogo
+    // const psycgologist = await checkPsychologistById(psychologist_id);
+
+    // //Buscar paciente
+    // const patient = await checkPatientById(patient_id);
+
+    // //Crear instancia de la creación del correo
+    // const mailInformationPatient = appointmenteCreationEmail({
+    //   psychologistName: psycgologist[0].name,
+    //   patientName: patient[0].name,
+    //   startDateAndTime: start_time,
+    //   finishDateAndTime: end_time,
+    //   email: patient[0].email
+    // });
+
     res.status(200).json({
       message: "Appointment updated successfully",
       start_time: mysqlStartTime,
@@ -420,7 +482,9 @@ const deletePatient = async (req, res) => {
 const deleteMedicalRecord = async (req, res) => {
   const { medicalRecordId } = req.params;
   try {
-    await connectDB.query("DELETE FROM medical_records WHERE id = ?", [medicalRecordId]);
+    await connectDB.query("DELETE FROM medical_records WHERE id = ?", [
+      medicalRecordId,
+    ]);
     res.status(200).json({ message: "Medical record deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
@@ -588,5 +652,5 @@ export {
   updateMedicalRecord,
   deleteMedicalRecord,
   deletePatient,
-  getMedicalRecordId
+  getMedicalRecordId,
 };

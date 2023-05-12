@@ -17,7 +17,6 @@ const forgetPasswordEmail = async (data) => {
   //Enviar correo de confirmación de cuenta
   const {name, email, token} = data;
 
-  console.log('hi',name)
 
   const mailInformation = await transporter.sendMail({
     from: 'Plataforma para la gestión de pacientes de tu consultorio psicológico',
@@ -35,7 +34,6 @@ const forgetPasswordEmail = async (data) => {
         </p>
         <p>Si no has creado esta cuenta, te pedimos que ignores este mensaje</p>`,
   });
-  console.log('Hola mundo 3')
 
   console.log("Mensaje enviado %s",mailInformation.messageId);
 };
