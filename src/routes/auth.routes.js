@@ -11,6 +11,7 @@ import {
   getPatients,
   getPatientId,
   createPatient,
+  updatePatient,
   getAppointments,
   createAppointment,
   updateAppointment,
@@ -20,7 +21,8 @@ import {
   updateMedicalRecord,
   deleteMedicalRecord,
   deletePatient,
-  getMedicalRecordId
+  getMedicalRecordId,
+  updateAppointmentForm,
 } from "../controllers/psychologist.controller.js";
 import authentication from "../middleware/authenticate.middleware.js";
 
@@ -41,11 +43,12 @@ router.get("/get-appointments", getAppointments);
 router.post("/create-appointment", createAppointment);
 router.delete("/delete-appointment/:eventId", deleteAppointment);
 router.patch("/update-appointment/:eventId", updateAppointment);
-router.patch("/update-appointment-form/:eventId", updateAppointment);
+router.patch("/update-appointment-form/:eventId", updateAppointmentForm);
 
 router.get("/get-patients", getPatients);
 router.get("/get-patient/:patientId", getPatientId);
 router.post("/create-patients", createPatient);
+router.patch("/update-patient/:patientId", updatePatient);
 router.delete("/delete-patient/:patientId", deletePatient);
 
 router.get("/get-medical-records", getMedicalRecords);

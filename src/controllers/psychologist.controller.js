@@ -335,6 +335,89 @@ const createPatient = async (req, res) => {
   }
 };
 
+const updatePatient = async (req, res) => {
+  const id = req.params.patientId;
+
+  const { name, document_type_id, document_number, email, address, phone } =
+    req.body;
+
+  const [checkResult] = await connectDB.query(
+    "SELECT * FROM patients WHERE id = ?",
+    [id]
+  );
+
+  if (checkResult.length === 0) {
+    res.status(404).json({ error: "Paciente no encontrado" });
+    return;
+  }
+
+  const fieldsToUpdate = [];
+  const params = [];
+
+  if (name) {
+    fieldsToUpdate.push("name = ?");
+    params.push(name);
+  }
+
+  if (document_type_id) {
+    fieldsToUpdate.push("document_type_id = ?");
+    params.push(document_type_id);
+  }
+
+  if (document_number) {
+    fieldsToUpdate.push("document_number = ?");
+    params.push(document_number);
+  }
+
+  if (email) {
+    fieldsToUpdate.push("email = ?");
+    params.push(email);
+  }
+
+  if (address) {
+    fieldsToUpdate.push("address = ?");
+    params.push(address);
+  }
+
+  if (phone) {
+    fieldsToUpdate.push("phone = ?");
+    params.push(phone);
+  }
+
+  if (fieldsToUpdate.length === 0) {
+    res
+      .status(400)
+      .json({ error: "No se proporcionaron campos para actualizar" });
+
+    return;
+  }
+
+  params.push(id);
+
+  const fieldsToUpdateString = fieldsToUpdate.join(", ");
+
+  try {
+    const [result] = await connectDB.query(
+      `UPDATE patients SET ${fieldsToUpdateString} WHERE id = ?`,
+
+      params
+    );
+    if (result.affectedRows === 0) {
+      res.status(404).json({ error: "Paciente no encontrado" });
+    } else {
+      res.status(200).json({
+        message: "Paciente actualizado correctamente",
+
+        id,
+
+        ...req.body,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Error del servidor" });
+  }
+};
+
 const getAppointments = async (req, res) => {
   try {
     const result = await connectDB.query("SELECT * FROM appointments");
@@ -368,8 +451,6 @@ const createAppointment = async (req, res) => {
       ]
     );
 
-
-
     //Buscar psicólogo
     const psycgologist = await checkPsychologistById(psychologist_id);
 
@@ -382,16 +463,15 @@ const createAppointment = async (req, res) => {
       patientName: patient[0].name,
       startDateAndTime: start_time,
       finishDateAndTime: end_time,
-      email: patient[0].email
+      email: patient[0].email,
     });
-
 
     const mailInformationPsychologist = appointmenteCreationEmail({
       psychologistName: psycgologist[0].name,
       patientName: patient[0].name,
       startDateAndTime: start_time,
       finishDateAndTime: end_time,
-      email: psycgologist[0].email
+      email: psycgologist[0].email,
     });
 
     res.status(201).json({
@@ -642,6 +722,7 @@ export {
   getPatients,
   getPatientId,
   createPatient,
+  updatePatient,
   getAppointments,
   updateAppointment,
   updateAppointmentForm,
