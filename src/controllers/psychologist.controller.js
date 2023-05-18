@@ -4,7 +4,7 @@ import { connectDB } from "../config/db.js";
 import generateToken from "../helpers/generateToken.js";
 import confirmationEmail from "../helpers/confirmationEmail.js";
 import forgetPasswordEmail from "../helpers/forgetPasswordEmail.js";
-import appointmenteCreationEmail from "../helpers/appointmentCreationEmail.js";
+import appointmentEmail from "../helpers/appointmentCreationEmail.js";
 
 const checkUserByEmail = async (email) => {
   const result = await connectDB.query(
@@ -458,21 +458,21 @@ const createAppointment = async (req, res) => {
     const patient = await checkPatientById(patient_id);
 
     //Crear instancia de la creación del correo
-    const mailInformationPatient = appointmenteCreationEmail({
+    const mailInformationPatient = appointmentEmail({
       psychologistName: psycgologist[0].name,
       patientName: patient[0].name,
       startDateAndTime: start_time,
       finishDateAndTime: end_time,
       email: patient[0].email,
-    });
+    }, true);
 
-    const mailInformationPsychologist = appointmenteCreationEmail({
+    const mailInformationPsychologist = appointmentEmail({
       psychologistName: psycgologist[0].name,
       patientName: patient[0].name,
       startDateAndTime: start_time,
       finishDateAndTime: end_time,
       email: psycgologist[0].email,
-    });
+    }, true);
 
     res.status(201).json({
       message: "Appointment created successfully",
@@ -490,6 +490,7 @@ const createAppointment = async (req, res) => {
   }
 };
 
+//¿Para que?
 const updateAppointment = async (req, res) => {
   const { eventId } = req.params;
   const { start_time, end_time, status, notes, price_cop } = req.body;
@@ -508,21 +509,6 @@ const updateAppointment = async (req, res) => {
       "UPDATE appointments SET start_time = ?, end_time = ?, status = ?, notes = ?, price_cop = ? WHERE id = ?",
       [mysqlStartTime, mysqlEndTime, status, notes, price_cop, eventId]
     );
-
-    //Buscar psicólogo
-    // const psycgologist = await checkPsychologistById(psychologist_id);
-
-    // //Buscar paciente
-    // const patient = await checkPatientById(patient_id);
-
-    // //Crear instancia de la creación del correo
-    // const mailInformationPatient = appointmenteCreationEmail({
-    //   psychologistName: psycgologist[0].name,
-    //   patientName: patient[0].name,
-    //   startDateAndTime: start_time,
-    //   finishDateAndTime: end_time,
-    //   email: patient[0].email
-    // });
 
     res.status(200).json({
       message: "Appointment updated successfully",
@@ -573,7 +559,7 @@ const deleteMedicalRecord = async (req, res) => {
 
 const updateAppointmentForm = async (req, res) => {
   const { eventId } = req.params;
-  const { start_time, end_time, status, notes, price_cop } = req.body;
+  const { start_time, end_time, status, notes, price_cop, patient_id, psychologist_id } = req.body;
 
   const mysqlStartTime = new Date(start_time)
     .toISOString()
@@ -589,6 +575,29 @@ const updateAppointmentForm = async (req, res) => {
       "UPDATE appointments SET start_time = ?, end_time = ?, status = ?, notes = ?, price_cop = ? WHERE id = ?",
       [mysqlStartTime, mysqlEndTime, status, notes, price_cop, eventId]
     );
+    
+    //Buscar psicólogo
+    const psycgologist = await checkPsychologistById(psychologist_id);
+
+    //Buscar paciente
+    const patient = await checkPatientById(patient_id);
+
+    //Crear instancia de la creación del correo
+    const mailInformationPatient = appointmentEmail({
+      psychologistName: psycgologist[0].name,
+      patientName: patient[0].name,
+      startDateAndTime: start_time,
+      finishDateAndTime: end_time,
+      email: patient[0].email
+    }, false);
+    const mailInformationPsychologist = appointmentEmail({
+      psychologistName: psycgologist[0].name,
+      patientName: patient[0].name,
+      startDateAndTime: start_time,
+      finishDateAndTime: end_time,
+      email: psycgologist[0].email,
+    }, false);
+
     res.status(200).json({
       message: "Appointment updated successfully",
       start_time: mysqlStartTime,

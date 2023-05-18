@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 //import dotenv from "dotenv";
 
-const appointmenteCreationEmail = async (data) => {
+const appointmentEmail = async (data, creation) => {
 
   const transporter = nodemailer.createTransport({
     host: process.env.HOST_EMAIL,
@@ -17,12 +17,22 @@ const appointmenteCreationEmail = async (data) => {
   //Enviar correo de creación de cita
   const {psychologistName, patientName, startDateAndTime,finishDateAndTime,email} = data;
 
+  let subject = '';
+  let text = '';
+
+  if(creation){
+    subject='Notificación creación de cita';
+    text='Notificación creación de cita';
+  } else {
+    subject='Notificación actualización de cita';
+    text='Notificación actualización de cita';
+  }
 
   const mailInformation = await transporter.sendMail({
     from: 'Plataforma para la gestión de pacientes de consultorio psicológico',
     to:email,
-    subject:'Notificación creación de cita',
-    text:'Notificación creación de cita',
+    subject:subject,
+    text:text,
     html:`
         <p>Buen día, a continuación enviamos los detalles de la cita psicológica programada
         </p>
@@ -40,4 +50,4 @@ const appointmenteCreationEmail = async (data) => {
   console.log("Mensaje enviado %s",mailInformation.messageId);
 };
 
-export default appointmenteCreationEmail;
+export default appointmentEmail;
