@@ -109,7 +109,7 @@ const confirmAccount = async (req, res) => {
 
   if (result.length === 0) {
     const error = new Error("Token inválido");
-    return res.status(400).json({ msg: error.message });
+    return res.status(400).json({ message: error.message });
   }
 
   try {
@@ -118,9 +118,9 @@ const confirmAccount = async (req, res) => {
       [null, 1, token]
     );
 
-    return res.status(200).json({ msg: "Cuenta confirmada" });
+    return res.status(200).json({ message: "Cuenta confirmada" });
   } catch (error) {
-    return res.json({ msg: error.message });
+    return res.json({ message: error.message });
   }
 };
 
@@ -194,7 +194,7 @@ const forgetPassword = async (req, res) => {
       forgetPasswordEmail({ name: result[0].name, email, token });
       res
         .status(200)
-        .json({ msg: "Se ha enviado un correo para reestablecer cuenta" });
+        .json({ message: "Se ha enviado un correo para reestablecer cuenta" });
     }
   } catch (error) {
     res.status(500).json({ error: "Error del servidor" });
@@ -209,7 +209,7 @@ const checkToken = async (req, res) => {
     const error = new Error("Token inválido");
     res.status(400).json({ message: error.message });
   } else {
-    res.json({ msg: "Token válido" });
+    res.json({ message: "Token válido" });
   }
 };
 
@@ -262,18 +262,24 @@ const getPatientId = async (req, res) => {
       [patientId]
     );
 
+
+
     if (result[0].length > 0) {
-      const patient = result[0][0];
-      res.json({
-        id: patient.id,
-        name: patient.name,
-        document_type_id: patient.tipodoc,
-        document_number: patient.documento,
-        email: patient.email,
-        phone: patient.telefono,
-        address: patient.direccion,
-      });
-    } else {
+      res.json(result[0][0]);
+
+      // const patient = result[0][0];
+      // res.json({
+      //   id: patient.id,
+      //   name: patient.name,
+      //   document_type_id: patient.tipodoc,
+      //   document_number: patient.documento,
+      //   email: patient.email,
+      //   phone: patient.telefono,
+      //   address: patient.direccion,
+      // });
+    }
+    
+    else {
       res.status(404).json({ error: "Paciente no encontrado" });
     }
   } catch (error) {
@@ -299,6 +305,7 @@ const getMedicalRecordId = async (req, res) => {
         ocupation: medical_record.ocupation,
         gender: medical_record.gender,
         marital_status: medical_record.marital_status,
+        medical_history: medical_record.medical_history,
         psychological_history: medical_record.psychological_history,
         treatment_plan: medical_record.treatment_plan,
         observations: medical_record.observations,
@@ -314,21 +321,18 @@ const getMedicalRecordId = async (req, res) => {
 };
 
 const createPatient = async (req, res) => {
-  const { nombre, tipodoc, documento, email, telefono, direccion } = req.body;
+  console.log(req.body)
+  const { nombre, tipodoc, documento, date_of_birth, email, telefono, direccion } = req.body;
   try {
+    console.log('hi')
     const [result] = await connectDB.query(
-      "INSERT INTO patients(name, document_type_id, document_number, email, phone, address) VALUES (?, ?, ?, ?, ?, ?)",
-      [nombre, tipodoc, documento, email, telefono, direccion]
+      "INSERT INTO patients(name, document_type_id, document_number, date_of_birth, email, phone, address) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [nombre, tipodoc, documento, date_of_birth, email, telefono, direccion]
     );
+    console.log('his')
+
     res.status(201).json({
-      message: "Paciente creado correctamente",
-      id: result.insertId,
-      nombre,
-      tipodoc,
-      documento,
-      email,
-      telefono,
-      direccion,
+      message: "Paciente creado correctamente"
     });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
@@ -406,11 +410,7 @@ const updatePatient = async (req, res) => {
       res.status(404).json({ error: "Paciente no encontrado" });
     } else {
       res.status(200).json({
-        message: "Paciente actualizado correctamente",
-
-        id,
-
-        ...req.body,
+        message: "Paciente actualizado correctamente"
       });
     }
   } catch (error) {
@@ -475,7 +475,7 @@ const createAppointment = async (req, res) => {
     }, true);
 
     res.status(201).json({
-      message: "Appointment created successfully",
+      message: "ACita creada correctamente",
       id: result.insertId,
       patient_id,
       psychologist_id,
@@ -490,10 +490,10 @@ const createAppointment = async (req, res) => {
   }
 };
 
-//¿Para que?
+//Actualizar una cita mediante arrastrando los eventos
 const updateAppointment = async (req, res) => {
   const { eventId } = req.params;
-  const { start_time, end_time, status, notes, price_cop } = req.body;
+  const { start_time, end_time, status, notes, price_cop,  patient_id, psychologist_id  } = req.body;
 
   const mysqlStartTime = new Date(start_time)
     .toISOString()
@@ -510,72 +510,6 @@ const updateAppointment = async (req, res) => {
       [mysqlStartTime, mysqlEndTime, status, notes, price_cop, eventId]
     );
 
-    res.status(200).json({
-      message: "Appointment updated successfully",
-      start_time: mysqlStartTime,
-      end_time: mysqlEndTime,
-      status,
-      notes,
-      price_cop,
-    });
-  } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
-
-const deleteAppointment = async (req, res) => {
-  const { eventId } = req.params;
-  try {
-    await connectDB.query("DELETE FROM appointments WHERE id = ?", [eventId]);
-    res.status(200).json({ message: "Appointment deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
-
-//Eliminar paciente
-const deletePatient = async (req, res) => {
-  const { patientId } = req.params;
-  try {
-    await connectDB.query("DELETE FROM patients WHERE id = ?", [patientId]);
-    res.status(200).json({ message: "Patient deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
-
-//Eliminar historia
-const deleteMedicalRecord = async (req, res) => {
-  const { medicalRecordId } = req.params;
-  try {
-    await connectDB.query("DELETE FROM medical_records WHERE id = ?", [
-      medicalRecordId,
-    ]);
-    res.status(200).json({ message: "Medical record deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
-
-const updateAppointmentForm = async (req, res) => {
-  const { eventId } = req.params;
-  const { start_time, end_time, status, notes, price_cop, patient_id, psychologist_id } = req.body;
-
-  const mysqlStartTime = new Date(start_time)
-    .toISOString()
-    .replace("T", " ")
-    .slice(0, 19);
-  const mysqlEndTime = new Date(end_time)
-    .toISOString()
-    .replace("T", " ")
-    .slice(0, 19);
-
-  try {
-    await connectDB.query(
-      "UPDATE appointments SET start_time = ?, end_time = ?, status = ?, notes = ?, price_cop = ? WHERE id = ?",
-      [mysqlStartTime, mysqlEndTime, status, notes, price_cop, eventId]
-    );
-    
     //Buscar psicólogo
     const psycgologist = await checkPsychologistById(psychologist_id);
 
@@ -599,7 +533,7 @@ const updateAppointmentForm = async (req, res) => {
     }, false);
 
     res.status(200).json({
-      message: "Appointment updated successfully",
+      message: "Cita actualizada correctamente",
       start_time: mysqlStartTime,
       end_time: mysqlEndTime,
       status,
@@ -610,6 +544,100 @@ const updateAppointmentForm = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+//Actualizar una cita mediante el formulario
+const updateAppointmentForm = async (req, res) => {
+  const { eventId } = req.params;
+  const { start_time, end_time, status, notes, price_cop, patient_id, psychologist_id } = req.body;
+  const mysqlStartTime = new Date(start_time)
+    .toISOString()
+    .replace("T", " ")
+    .slice(0, 19);
+  const mysqlEndTime = new Date(end_time)
+    .toISOString()
+    .replace("T", " ")
+    .slice(0, 19);
+
+  try {
+
+    await connectDB.query(
+      "UPDATE appointments SET start_time = ?, end_time = ?, status = ?, notes = ?, price_cop = ? WHERE id = ?",
+      [mysqlStartTime, mysqlEndTime, status, notes, price_cop, eventId]
+    );
+
+
+    //Buscar psicólogo
+    const psycgologist = await checkPsychologistById(psychologist_id);
+
+    //Buscar paciente
+    const patient = await checkPatientById(patient_id);
+
+    //Crear instancia de la creación del correo
+    const mailInformationPatient = appointmentEmail({
+      psychologistName: psycgologist[0].name,
+      patientName: patient[0].name,
+      startDateAndTime: start_time,
+      finishDateAndTime: end_time,
+      email: patient[0].email
+    }, false);
+    const mailInformationPsychologist = appointmentEmail({
+      psychologistName: psycgologist[0].name,
+      patientName: patient[0].name,
+      startDateAndTime: start_time,
+      finishDateAndTime: end_time,
+      email: psycgologist[0].email,
+    }, false);
+
+    res.status(200).json({
+      message: "Cita actualizada correctamente",
+      start_time: mysqlStartTime,
+      end_time: mysqlEndTime,
+      status,
+      notes,
+      price_cop,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const deleteAppointment = async (req, res) => {
+  const { eventId } = req.params;
+  try {
+    await connectDB.query("DELETE FROM appointments WHERE id = ?", [eventId]);
+    res.status(200).json({ message: "Cita eliminada correctamente" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+
+//Eliminar paciente
+const deletePatient = async (req, res) => {
+  const { patientId } = req.params;
+  try {
+    await connectDB.query("DELETE FROM patients WHERE id = ?", [patientId]);
+    res.status(200).json({ message: "Paciente eliminado correctamente" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+//Eliminar historia
+const deleteMedicalRecord = async (req, res) => {
+  const { medicalRecordId } = req.params;
+  try {
+    await connectDB.query("DELETE FROM medical_records WHERE id = ?", [
+      medicalRecordId,
+    ]);
+    res.status(200).json({ message: "Medical record deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
 
 // Obtener registros médicos
 const getMedicalRecords = async (req, res) => {

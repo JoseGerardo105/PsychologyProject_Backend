@@ -25,13 +25,13 @@ const authentication = async (req, res, next) => {
       return next();
     } catch (error) {
       const e = new Error("Wron token");
-      return res.status(403).json({ msg: e.message });
+      return res.status(403).json({ message: e.message });
     }
   }
 
   if (!token) {
     const error = new Error("Wron token or without bearer");
-    res.status(403).json({ msg: error.message });
+    res.status(403).json({ message: error.message });
   }
   next();
   //   res.json();

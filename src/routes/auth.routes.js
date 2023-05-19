@@ -30,31 +30,37 @@ const router = express.Router();
 
 //URLs públicas
 router.post("/register", register);
-router.post("/login", login);
 router.get("/confirm/:token", confirmAccount);
-router.patch("/change-password/", forgetPassword);
+router.post("/login", login);
+router.patch("/change-password", forgetPassword);
 router.route("/change-password/:token").get(checkToken).post(newPassword);
 
-//Se requiere cuenta para mostrar estas páginas
-router.get("/profile", authentication, profile);
-router.get("/get-psychologists", getPsychologists);
-
+//URLs manejo de citas
 router.get("/get-appointments", getAppointments);
 router.post("/create-appointment", createAppointment);
-router.delete("/delete-appointment/:eventId", deleteAppointment);
 router.patch("/update-appointment/:eventId", updateAppointment);
 router.patch("/update-appointment-form/:eventId", updateAppointmentForm);
+router.delete("/delete-appointment/:eventId", deleteAppointment);
 
+
+//URLs manejo de pacientes
+router.post("/create-patients", createPatient);
 router.get("/get-patients", getPatients);
 router.get("/get-patient/:patientId", getPatientId);
-router.post("/create-patients", createPatient);
 router.patch("/update-patient/:patientId", updatePatient);
 router.delete("/delete-patient/:patientId", deletePatient);
 
-router.get("/get-medical-records", getMedicalRecords);
-router.get("/get-medical-record/:medicalRecordId", getMedicalRecordId);
+//URLs manejo de historias
 router.post("/create-medical-records", createMedicalRecord);
+router.get("/get-medical-record/:medicalRecordId", getMedicalRecordId);
 router.patch("/update-medical-records/:medicalRecordId", updateMedicalRecord);
 router.delete("/delete-medical-record/:medicalRecordId", deleteMedicalRecord);
+
+
+//Para que?
+//Se requiere cuenta para mostrar estas páginas
+router.get("/profile", authentication, profile);
+router.get("/get-medical-records", getMedicalRecords);
+router.get("/get-psychologists", getPsychologists);
 
 export default router;
