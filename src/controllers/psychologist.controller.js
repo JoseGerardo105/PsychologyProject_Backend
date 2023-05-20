@@ -321,15 +321,12 @@ const getMedicalRecordId = async (req, res) => {
 };
 
 const createPatient = async (req, res) => {
-  console.log(req.body)
   const { nombre, tipodoc, documento, date_of_birth, email, telefono, direccion } = req.body;
   try {
-    console.log('hi')
     const [result] = await connectDB.query(
       "INSERT INTO patients(name, document_type_id, document_number, date_of_birth, email, phone, address) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [nombre, tipodoc, documento, date_of_birth, email, telefono, direccion]
     );
-    console.log('his')
 
     res.status(201).json({
       message: "Paciente creado correctamente"
@@ -654,8 +651,6 @@ const createMedicalRecord = async (req, res) => {
   const {
     patient_id,
     ocupation,
-    document_number,
-    date_of_birth,
     gender,
     marital_status,
     medical_history,
@@ -665,7 +660,7 @@ const createMedicalRecord = async (req, res) => {
   } = req.body;
   try {
     const [result] = await connectDB.query(
-      "INSERT INTO medical_records(patient_id,ocupation, gender, marital_status, medical_history, psychological_history, treatment_plan, observations, document_number, date_of_birth) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?)",
+      "INSERT INTO medical_records(patient_id,ocupation, gender, marital_status, medical_history, psychological_history, treatment_plan, observations) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       [
         patient_id,
         ocupation,
@@ -675,8 +670,6 @@ const createMedicalRecord = async (req, res) => {
         psychological_history,
         treatment_plan,
         observations,
-        document_number,
-        date_of_birth,
       ]
     );
     res.status(201).json({
@@ -690,8 +683,6 @@ const createMedicalRecord = async (req, res) => {
       psychological_history,
       treatment_plan,
       observations,
-      document_number,
-      date_of_birth,
     });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
@@ -700,11 +691,8 @@ const createMedicalRecord = async (req, res) => {
 
 // Actualizar un registro médico
 const updateMedicalRecord = async (req, res) => {
-  const { recordId } = req.params;
+  const { medicalRecordId } = req.params;
   const {
-    patient_id,
-    document_number,
-    date_of_birth,
     ocupation,
     gender,
     marital_status,
@@ -716,31 +704,28 @@ const updateMedicalRecord = async (req, res) => {
 
   try {
     await connectDB.query(
-      "UPDATE medical_records SET patient_id = ?, gender = ?, marital_status = ?, medical_history = ?, psychological_history = ?, treatment_plan = ?, observations = ?, document_number = ?, date_of_birth = ? WHERE id = ?",
+      "UPDATE medical_records SET ocupation = ?, gender = ?, marital_status = ?, medical_history = ?, psychological_history = ?, treatment_plan = ?, observations = ? WHERE id = ?",
       [
-        patient_id,
+        ocupation,
         gender,
         marital_status,
         medical_history,
         psychological_history,
         treatment_plan,
         observations,
-        document_number,
-        date_of_birth,
-        recordId,
+        medicalRecordId,
       ]
     );
+
     res.status(200).json({
       message: "Medical record updated successfully",
-      patient_id,
+      ocupation,
       gender,
       marital_status,
       medical_history,
       psychological_history,
       treatment_plan,
       observations,
-      document_number,
-      date_of_birth,
     });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
