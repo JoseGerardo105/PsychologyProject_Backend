@@ -689,48 +689,147 @@ const createMedicalRecord = async (req, res) => {
   }
 };
 
-// Actualizar un registro médico
+//Actualizar una historia medica
 const updateMedicalRecord = async (req, res) => {
-  const { medicalRecordId } = req.params;
-  const {
-    ocupation,
-    gender,
-    marital_status,
-    medical_history,
-    psychological_history,
-    treatment_plan,
-    observations,
-  } = req.body;
+  const id = req.params.medicalRecordId;
+
+  const { ocupation, gender, marital_status, medical_history, psychological_history, treatment_plan, observations } = req.body;
+
+  const [checkResult] = await connectDB.query(
+    "SELECT * FROM medical_records WHERE id = ?",
+    [id]
+  );
+
+  if (checkResult.length === 0) {
+    res.status(404).json({ error: "Historia no encontrada" });
+    return;
+  }
+
+  const fieldsToUpdate = [];
+  const params = [];
+
+  if (ocupation) {
+    fieldsToUpdate.push("ocupation = ?");
+    params.push(ocupation);
+  }
+
+  if (gender) {
+    fieldsToUpdate.push("gender = ?");
+    params.push(gender);
+  }
+
+  if (marital_status) {
+    fieldsToUpdate.push("marital_status = ?");
+    params.push(marital_status);
+  }
+
+  if (medical_history) {
+    fieldsToUpdate.push("medical_history = ?");
+    params.push(medical_history);
+  }
+
+  if (psychological_history) {
+    fieldsToUpdate.push("psychological_history = ?");
+    params.push(psychological_history);
+  }
+
+  if (treatment_plan) {
+    fieldsToUpdate.push("treatment_plan = ?");
+    params.push(treatment_plan);
+  }
+
+  if (observations) {
+    fieldsToUpdate.push("observations = ?");
+    params.push(observations);
+  }
+
+  if (fieldsToUpdate.length === 0) {
+    res
+      .status(400)
+      .json({ error: "No se proporcionaron campos para actualizar" });
+
+    return;
+  }
+
+  params.push(id);
+
+  const fieldsToUpdateString = fieldsToUpdate.join(", ");
 
   try {
-    await connectDB.query(
-      "UPDATE medical_records SET ocupation = ?, gender = ?, marital_status = ?, medical_history = ?, psychological_history = ?, treatment_plan = ?, observations = ? WHERE id = ?",
-      [
-        ocupation,
-        gender,
-        marital_status,
-        medical_history,
-        psychological_history,
-        treatment_plan,
-        observations,
-        medicalRecordId,
-      ]
-    );
+    const [result] = await connectDB.query(
+      `UPDATE medical_records SET ${fieldsToUpdateString} WHERE id = ?`,
 
-    res.status(200).json({
-      message: "Medical record updated successfully",
-      ocupation,
-      gender,
-      marital_status,
-      medical_history,
-      psychological_history,
-      treatment_plan,
-      observations,
-    });
+      params
+    );
+    if (result.affectedRows === 0) {
+      res.status(404).json({ error: "Historia no encontrada" });
+    } else {
+      res.status(200).json({
+        message: "Historia actualizada correctamente"
+      });
+    }
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Error del servidor" });
   }
 };
+
+//Obtiene un paciente
+const getPatientIdWithDocument = async (req, res) => {
+  try {
+    const patientDoc = req.params.patientDoc;
+
+    const result = await connectDB.query(
+      "SELECT * FROM patients WHERE document_number = ?",
+      [patientDoc]
+    );
+
+    if (result[0].length > 0) {
+      res.json(result[0][0]);
+    }
+    
+    else {
+      res.status(404).json({ error: "Paciente no encontrado" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener pacientes" });
+  }
+};
+
+//Obtiene una historia medica
+const getMedicalRecordByDocument = async (req, res) => {
+  try {
+    const document = req.params.document;
+
+    const result = await connectDB.query(
+      "SELECT * FROM medical_records WHERE patient_id = (SELECT id FROM patients WHERE document_number = ?)",
+      [document]
+    );
+
+    if (result[0].length > 0) {
+      const medicalRecords = result[0].map((record) => ({
+        id: record.id,
+        patientid: record.patient_id,
+        ocupation: record.ocupation,
+        gender: record.gender,
+        marital_status: record.marital_status,
+        medical_history: record.medical_history,
+        psychological_history: record.psychological_history,
+        treatment_plan: record.treatment_plan,
+        observations: record.observations,
+        document_number: record.document_number,
+        date_of_birth: record.date_of_birth,
+      }));
+
+      res.json(medicalRecords);
+    } else {
+      res.status(404).json({ error: "Historias no encontradas" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener historias" });
+  }
+};
+
+
 
 export {
   register,
@@ -756,4 +855,6 @@ export {
   deleteMedicalRecord,
   deletePatient,
   getMedicalRecordId,
+  getPatientIdWithDocument,
+  getMedicalRecordByDocument
 };

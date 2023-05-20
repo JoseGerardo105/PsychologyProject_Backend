@@ -23,6 +23,8 @@ import {
   deletePatient,
   getMedicalRecordId,
   updateAppointmentForm,
+  getPatientIdWithDocument,
+  getMedicalRecordByDocument
 } from "../controllers/psychologist.controller.js";
 import authentication from "../middleware/authenticate.middleware.js";
 
@@ -48,6 +50,7 @@ router.delete("/delete-appointment/:eventId", deleteAppointment);
 router.post("/create-patients", createPatient);
 router.get("/get-patients", getPatients);
 router.get("/get-patient/:patientId", getPatientId);
+router.get("/get-patient-with-doc/:patientDoc", getPatientIdWithDocument);
 router.patch("/update-patient/:patientId", updatePatient);
 router.delete("/delete-patient/:patientId", deletePatient);
 
@@ -55,6 +58,7 @@ router.delete("/delete-patient/:patientId", deletePatient);
 router.post("/create-medical-records", createMedicalRecord);
 router.get("/get-medical-records", getMedicalRecords);
 router.get("/get-medical-record/:medicalRecordId", getMedicalRecordId);
+router.get("/get-medical-record-with-doc/:document", getMedicalRecordByDocument);
 router.patch("/update-medical-records/:medicalRecordId", updateMedicalRecord);
 router.delete("/delete-medical-record/:medicalRecordId", deleteMedicalRecord);
 
