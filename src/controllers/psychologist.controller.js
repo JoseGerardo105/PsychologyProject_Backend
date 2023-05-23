@@ -482,7 +482,7 @@ const createAppointment = async (req, res) => {
     );
 
     res.status(201).json({
-      message: "ACita creada correctamente",
+      message: "Cita creada correctamente",
       id: result.insertId,
       patient_id,
       psychologist_id,
@@ -662,7 +662,9 @@ const deleteMedicalRecord = async (req, res) => {
     await connectDB.query("DELETE FROM medical_records WHERE id = ?", [
       medicalRecordId,
     ]);
-    res.status(200).json({ message: "Medical record deleted successfully" });
+    res
+      .status(200)
+      .json({ message: "Historia clínica eliminada correctamente" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
