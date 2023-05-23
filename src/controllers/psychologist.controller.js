@@ -262,8 +262,6 @@ const getPatientId = async (req, res) => {
       [patientId]
     );
 
-
-
     if (result[0].length > 0) {
       res.json(result[0][0]);
 
@@ -277,9 +275,7 @@ const getPatientId = async (req, res) => {
       //   phone: patient.telefono,
       //   address: patient.direccion,
       // });
-    }
-    
-    else {
+    } else {
       res.status(404).json({ error: "Paciente no encontrado" });
     }
   } catch (error) {
@@ -321,7 +317,15 @@ const getMedicalRecordId = async (req, res) => {
 };
 
 const createPatient = async (req, res) => {
-  const { nombre, tipodoc, documento, date_of_birth, email, telefono, direccion } = req.body;
+  const {
+    nombre,
+    tipodoc,
+    documento,
+    date_of_birth,
+    email,
+    telefono,
+    direccion,
+  } = req.body;
   try {
     const [result] = await connectDB.query(
       "INSERT INTO patients(name, document_type_id, document_number, date_of_birth, email, phone, address) VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -329,7 +333,7 @@ const createPatient = async (req, res) => {
     );
 
     res.status(201).json({
-      message: "Paciente creado correctamente"
+      message: "Paciente creado correctamente",
     });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
@@ -407,7 +411,7 @@ const updatePatient = async (req, res) => {
       res.status(404).json({ error: "Paciente no encontrado" });
     } else {
       res.status(200).json({
-        message: "Paciente actualizado correctamente"
+        message: "Paciente actualizado correctamente",
       });
     }
   } catch (error) {
@@ -455,21 +459,27 @@ const createAppointment = async (req, res) => {
     const patient = await checkPatientById(patient_id);
 
     //Crear instancia de la creación del correo
-    const mailInformationPatient = appointmentEmail({
-      psychologistName: psycgologist[0].name,
-      patientName: patient[0].name,
-      startDateAndTime: start_time,
-      finishDateAndTime: end_time,
-      email: patient[0].email,
-    }, true);
+    const mailInformationPatient = appointmentEmail(
+      {
+        psychologistName: psycgologist[0].name,
+        patientName: patient[0].name,
+        startDateAndTime: start_time,
+        finishDateAndTime: end_time,
+        email: patient[0].email,
+      },
+      true
+    );
 
-    const mailInformationPsychologist = appointmentEmail({
-      psychologistName: psycgologist[0].name,
-      patientName: patient[0].name,
-      startDateAndTime: start_time,
-      finishDateAndTime: end_time,
-      email: psycgologist[0].email,
-    }, true);
+    const mailInformationPsychologist = appointmentEmail(
+      {
+        psychologistName: psycgologist[0].name,
+        patientName: patient[0].name,
+        startDateAndTime: start_time,
+        finishDateAndTime: end_time,
+        email: psycgologist[0].email,
+      },
+      true
+    );
 
     res.status(201).json({
       message: "ACita creada correctamente",
@@ -490,7 +500,15 @@ const createAppointment = async (req, res) => {
 //Actualizar una cita mediante arrastrando los eventos
 const updateAppointment = async (req, res) => {
   const { eventId } = req.params;
-  const { start_time, end_time, status, notes, price_cop,  patient_id, psychologist_id  } = req.body;
+  const {
+    start_time,
+    end_time,
+    status,
+    notes,
+    price_cop,
+    patient_id,
+    psychologist_id,
+  } = req.body;
 
   const mysqlStartTime = new Date(start_time)
     .toISOString()
@@ -514,20 +532,26 @@ const updateAppointment = async (req, res) => {
     const patient = await checkPatientById(patient_id);
 
     //Crear instancia de la creación del correo
-    const mailInformationPatient = appointmentEmail({
-      psychologistName: psycgologist[0].name,
-      patientName: patient[0].name,
-      startDateAndTime: start_time,
-      finishDateAndTime: end_time,
-      email: patient[0].email
-    }, false);
-    const mailInformationPsychologist = appointmentEmail({
-      psychologistName: psycgologist[0].name,
-      patientName: patient[0].name,
-      startDateAndTime: start_time,
-      finishDateAndTime: end_time,
-      email: psycgologist[0].email,
-    }, false);
+    const mailInformationPatient = appointmentEmail(
+      {
+        psychologistName: psycgologist[0].name,
+        patientName: patient[0].name,
+        startDateAndTime: start_time,
+        finishDateAndTime: end_time,
+        email: patient[0].email,
+      },
+      false
+    );
+    const mailInformationPsychologist = appointmentEmail(
+      {
+        psychologistName: psycgologist[0].name,
+        patientName: patient[0].name,
+        startDateAndTime: start_time,
+        finishDateAndTime: end_time,
+        email: psycgologist[0].email,
+      },
+      false
+    );
 
     res.status(200).json({
       message: "Cita actualizada correctamente",
@@ -545,7 +569,15 @@ const updateAppointment = async (req, res) => {
 //Actualizar una cita mediante el formulario
 const updateAppointmentForm = async (req, res) => {
   const { eventId } = req.params;
-  const { start_time, end_time, status, notes, price_cop, patient_id, psychologist_id } = req.body;
+  const {
+    start_time,
+    end_time,
+    status,
+    notes,
+    price_cop,
+    patient_id,
+    psychologist_id,
+  } = req.body;
   const mysqlStartTime = new Date(start_time)
     .toISOString()
     .replace("T", " ")
@@ -556,12 +588,10 @@ const updateAppointmentForm = async (req, res) => {
     .slice(0, 19);
 
   try {
-
     await connectDB.query(
       "UPDATE appointments SET start_time = ?, end_time = ?, status = ?, notes = ?, price_cop = ? WHERE id = ?",
       [mysqlStartTime, mysqlEndTime, status, notes, price_cop, eventId]
     );
-
 
     //Buscar psicólogo
     const psycgologist = await checkPsychologistById(psychologist_id);
@@ -570,20 +600,26 @@ const updateAppointmentForm = async (req, res) => {
     const patient = await checkPatientById(patient_id);
 
     //Crear instancia de la creación del correo
-    const mailInformationPatient = appointmentEmail({
-      psychologistName: psycgologist[0].name,
-      patientName: patient[0].name,
-      startDateAndTime: start_time,
-      finishDateAndTime: end_time,
-      email: patient[0].email
-    }, false);
-    const mailInformationPsychologist = appointmentEmail({
-      psychologistName: psycgologist[0].name,
-      patientName: patient[0].name,
-      startDateAndTime: start_time,
-      finishDateAndTime: end_time,
-      email: psycgologist[0].email,
-    }, false);
+    const mailInformationPatient = appointmentEmail(
+      {
+        psychologistName: psycgologist[0].name,
+        patientName: patient[0].name,
+        startDateAndTime: start_time,
+        finishDateAndTime: end_time,
+        email: patient[0].email,
+      },
+      false
+    );
+    const mailInformationPsychologist = appointmentEmail(
+      {
+        psychologistName: psycgologist[0].name,
+        patientName: patient[0].name,
+        startDateAndTime: start_time,
+        finishDateAndTime: end_time,
+        email: psycgologist[0].email,
+      },
+      false
+    );
 
     res.status(200).json({
       message: "Cita actualizada correctamente",
@@ -608,8 +644,6 @@ const deleteAppointment = async (req, res) => {
   }
 };
 
-
-
 //Eliminar paciente
 const deletePatient = async (req, res) => {
   const { patientId } = req.params;
@@ -633,8 +667,6 @@ const deleteMedicalRecord = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
-
 
 // Obtener registros médicos
 const getMedicalRecords = async (req, res) => {
@@ -693,7 +725,15 @@ const createMedicalRecord = async (req, res) => {
 const updateMedicalRecord = async (req, res) => {
   const id = req.params.medicalRecordId;
 
-  const { ocupation, gender, marital_status, medical_history, psychological_history, treatment_plan, observations } = req.body;
+  const {
+    ocupation,
+    gender,
+    marital_status,
+    medical_history,
+    psychological_history,
+    treatment_plan,
+    observations,
+  } = req.body;
 
   const [checkResult] = await connectDB.query(
     "SELECT * FROM medical_records WHERE id = ?",
@@ -765,7 +805,7 @@ const updateMedicalRecord = async (req, res) => {
       res.status(404).json({ error: "Historia no encontrada" });
     } else {
       res.status(200).json({
-        message: "Historia actualizada correctamente"
+        message: "Historia actualizada correctamente",
       });
     }
   } catch (error) {
@@ -785,9 +825,7 @@ const getPatientIdWithDocument = async (req, res) => {
 
     if (result[0].length > 0) {
       res.json(result[0][0]);
-    }
-    
-    else {
+    } else {
       res.status(404).json({ error: "Paciente no encontrado" });
     }
   } catch (error) {
@@ -829,7 +867,26 @@ const getMedicalRecordByDocument = async (req, res) => {
   }
 };
 
-
+const getUserAppointments = async (req, res) => {
+  const userId = req.user.id;
+  try {
+    let result;
+    if (req.user.role === "administrador") {
+      result = await connectDB.query("SELECT * FROM appointments");
+    } else if (req.user.role === "usuario") {
+      result = await connectDB.query(
+        "SELECT * FROM appointments WHERE psychologist_id = ?",
+        [userId]
+      );
+    } else {
+      res.status(403).json({ error: "Unauthorized" });
+      return;
+    }
+    res.json(result[0]);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 export {
   register,
@@ -856,5 +913,6 @@ export {
   deletePatient,
   getMedicalRecordId,
   getPatientIdWithDocument,
-  getMedicalRecordByDocument
+  getMedicalRecordByDocument,
+  getUserAppointments,
 };
