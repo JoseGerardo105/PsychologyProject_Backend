@@ -472,7 +472,7 @@ const createAppointment = async (req, res) => {
     }, true);
 
     res.status(201).json({
-      message: "ACita creada correctamente",
+      message: "Cita creada correctamente",
       id: result.insertId,
       patient_id,
       psychologist_id,
@@ -545,6 +545,7 @@ const updateAppointment = async (req, res) => {
 //Actualizar una cita mediante el formulario
 const updateAppointmentForm = async (req, res) => {
   const { eventId } = req.params;
+  console.log(req.body)
   const { start_time, end_time, status, notes, price_cop, patient_id, psychologist_id } = req.body;
   const mysqlStartTime = new Date(start_time)
     .toISOString()
@@ -577,6 +578,7 @@ const updateAppointmentForm = async (req, res) => {
       finishDateAndTime: end_time,
       email: patient[0].email
     }, false);
+
     const mailInformationPsychologist = appointmentEmail({
       psychologistName: psycgologist[0].name,
       patientName: patient[0].name,
@@ -628,7 +630,7 @@ const deleteMedicalRecord = async (req, res) => {
     await connectDB.query("DELETE FROM medical_records WHERE id = ?", [
       medicalRecordId,
     ]);
-    res.status(200).json({ message: "Medical record deleted successfully" });
+    res.status(200).json({ message: "Historia clínica eliminada correctamente" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
