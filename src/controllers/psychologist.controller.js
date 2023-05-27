@@ -890,6 +890,166 @@ const getUserAppointments = async (req, res) => {
   }
 };
 
+//Reporte para el administrador
+const getPatientsByAge = async (req, res) => {
+  try {
+    const query = `
+      SELECT FLOOR(DATEDIFF(CURDATE(), date_of_birth) / 365) AS age, COUNT(*) AS count
+      FROM patients
+      GROUP BY age
+      ORDER BY age;
+    `;
+
+    const [rows] = await connectDB.query(query);
+
+    const ageRanges = [
+      { min: 0, max: 20 },
+      { min: 20, max: 40 },
+      { min: 40, max: 60 },
+      { min: 60, max: 80 },
+      { min: 80, max: 100 },
+    ];
+
+    const arrayRanges = ageRanges.map((range) => {
+      const { min, max } = range;
+      const count = rows.reduce((acc, obj) => {
+        if (obj.age >= min && obj.age < max) {
+          return acc + obj.count;
+        } else {
+          return acc;
+        }
+      }, 0);
+      return { age: `${min}-${max}`, count };
+    });
+
+    console.log(arrayRanges);
+    res.status(200).json(arrayRanges);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error al obtener datos de pacientes por edad" });
+  }
+};
+
+//Reporte para un psicólogo
+const getPsychologistPatientsByAge = async (req, res) => {
+  const {email} = req.params;
+  try {
+    // const query = `
+    //   SELECT FLOOR(DATEDIFF(CURDATE(), date_of_birth) / 365) AS age, COUNT(*) AS count
+    //   FROM patients
+    //   JOIN appointments ON patients.id = appointments.patient_id 
+    //   WHERE appointments.psychologist_id = ?
+    //   GROUP BY age
+    //   ORDER BY age;
+    // `;
+
+    const query = `
+      SELECT FLOOR(DATEDIFF(CURDATE(), date_of_birth) / 365) AS age, COUNT(*) AS count
+      FROM patients
+      JOIN appointments ON patients.id = appointments.patient_id 
+      JOIN psychologists ON appointments.psychologist_id = psychologists.id
+      WHERE psychologists.email = ?
+      GROUP BY age
+      ORDER BY age;
+      `;
+    const [rows] = await connectDB.query(query,[email]);
+
+    const ageRanges = [
+      { min: 0, max: 20 },
+      { min: 20, max: 40 },
+      { min: 40, max: 60 },
+      { min: 60, max: 80 },
+      { min: 80, max: 100 },
+    ];
+
+    const arrayRanges = ageRanges.map((range) => {
+      const { min, max } = range;
+      const count = rows.reduce((acc, obj) => {
+        if (obj.age >= min && obj.age < max) {
+          return acc + obj.count;
+        } else {
+          return acc;
+        }
+      }, 0);
+      return { age: `${min}-${max}`, count };
+    });
+
+    console.log(arrayRanges);
+    res.status(200).json(arrayRanges);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error al obtener datos de pacientes por edad" });
+  }
+};
+
+//Reporte de ingresos para un psicólogo
+const getPsyichologistIncomeByAppointments = async (req, res) => {
+  try {
+    const startDate = new Date(req.query.start_date);
+    const endDate = new Date(req.query.end_date);
+    const psychologistEmail = req.query.psychologist_email;
+    const psychologist = await checkUserByEmail(psychologistEmail);
+    const psychologist_id = psychologist[0].id;
+
+    const query = `
+      SELECT DATE(start_time) AS date, SUM(price_cop) AS total_income
+      FROM appointments
+      WHERE start_time BETWEEN ? AND ? 
+      AND psychologist_id = ?
+      GROUP BY DATE(start_time)
+      ORDER BY DATE(start_time);
+    `;
+
+    const [rows] = await connectDB.query(query, [
+      startDate,
+      endDate,
+      psychologist_id,
+    ]);
+    const totalIncomeSum = rows.reduce((accumulator, current) => {
+      const totalIncome = parseInt(current.total_income);
+      return accumulator + totalIncome;
+    }, 0);
+
+    res.status(200).json([{ totalIncomeSum }]);
+  } catch (error) {
+    res.status(500).json({ message: "Error al obtener ingresos por citas" });
+  }
+};
+
+//Reporte de ingresos para el administrador
+const getAdminIncomeByAppointments = async (req, res) => {
+  try {
+    const startDate = new Date(req.query.start_date);
+    const endDate = new Date(req.query.end_date);
+    // const psychologistEmail = req.query.psychologist_email;
+    // const psychologist = await checkUserByEmail(psychologistEmail);
+    // const psychologist_id = psychologist[0].id;
+
+    const query = `
+      SELECT DATE(start_time) AS date, SUM(price_cop) AS total_income
+      FROM appointments
+      WHERE start_time BETWEEN ? AND ? 
+      GROUP BY DATE(start_time)
+      ORDER BY DATE(start_time);
+    `;
+
+    const [rows] = await connectDB.query(query, [
+      startDate,
+      endDate,
+    ]);
+    const totalIncomeSum = rows.reduce((accumulator, current) => {
+      const totalIncome = parseInt(current.total_income);
+      return accumulator + totalIncome;
+    }, 0);
+
+    res.status(200).json([{ totalIncomeSum }]);
+  } catch (error) {
+    res.status(500).json({ message: "Error al obtener ingresos por citas" });
+  }
+};
+
 export {
   register,
   login,
@@ -917,4 +1077,8 @@ export {
   getPatientIdWithDocument,
   getMedicalRecordByDocument,
   getUserAppointments,
+  getPatientsByAge,
+  getAdminIncomeByAppointments,
+  getPsyichologistIncomeByAppointments,
+  getPsychologistPatientsByAge
 };

@@ -26,6 +26,10 @@ import {
   getPatientIdWithDocument,
   getMedicalRecordByDocument,
   getUserAppointments,
+  getPatientsByAge,
+  getPsychologistPatientsByAge,
+  getAdminIncomeByAppointments,
+  getPsyichologistIncomeByAppointments
 } from "../controllers/psychologist.controller.js";
 import authentication from "../middleware/authenticate.middleware.js";
 
@@ -41,6 +45,7 @@ router.get("/get-psychologists", getPsychologists);
 
 //Se requiere cuenta para mostrar estas páginas
 //URLs manejo de citas
+router.get("/get-user-appointments", authentication, getUserAppointments);
 router.get("/get-appointments", getAppointments);
 router.post("/create-appointment", createAppointment);
 router.patch("/update-appointment/:eventId", updateAppointment);
@@ -59,15 +64,19 @@ router.delete("/delete-patient/:patientId", deletePatient);
 router.post("/create-medical-records", createMedicalRecord);
 router.get("/get-medical-records", getMedicalRecords);
 router.get("/get-medical-record/:medicalRecordId", getMedicalRecordId);
-router.get(
-  "/get-medical-record-with-doc/:document",
-  getMedicalRecordByDocument
-);
+router.get("/get-medical-record-with-doc/:document",getMedicalRecordByDocument);
 router.patch("/update-medical-records/:medicalRecordId", updateMedicalRecord);
 router.delete("/delete-medical-record/:medicalRecordId", deleteMedicalRecord);
 
+//URLs generación de reportes
+router.get("/get-patients-by-age", getPatientsByAge);
+router.get("/get-patients-by-age-user/:email", getPsychologistPatientsByAge);
+router.get("/get-income-by-appointments-psychologist", getPsyichologistIncomeByAppointments);
+router.get("/get-income-by-appointments-admin", getAdminIncomeByAppointments);
+
+
+
 router.get("/profile", authentication, profile);
 
-router.get("/get-user-appointments", authentication, getUserAppointments);
 
 export default router;
