@@ -130,6 +130,13 @@ const getPsychologists = async (req, res) => {
   res.json(result[0]);
 };
 
+const getAPsychologist = async (req, res) => {
+  const {email} = req.params;
+  // prueba base de datos
+  const result = await connectDB.query("SELECT * from psychologists WHERE email = ?", [email]);
+  res.json(result[0]);
+};
+
 const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -243,9 +250,27 @@ const newPassword = async (req, res) => {
   }
 };
 
-const getPatients = async (req, res) => {
+const getAdminPatients = async (req, res) => {
   try {
     const result = await connectDB.query("SELECT * FROM patients");
+
+    res.json(result[0]);
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener pacientes" });
+  }
+};
+
+const getPsychologystPatients = async (req, res) => {
+  const {psychologistEmail} = req.params;
+  console.log(psychologistEmail)
+  try {
+
+    // const result = await connectDB.query(
+    //   "SELECT * FROM medical_records WHERE id = ?",
+    //   [medicalRecordId]
+    // );
+    const result = await connectDB.query("SELECT DISTINCT patients.id, patients.name, patients.document_number, patients.email, patients.address, patients.document_type_id, patients.phone, patients.date_of_birth FROM patients JOIN appointments ON patients.id = appointments.patient_id JOIN psychologists ON appointments.psychologist_id = psychologists.id WHERE psychologists.email = ?;",[psychologistEmail]);
+
     res.json(result[0]);
   } catch (error) {
     res.status(500).json({ error: "Error al obtener pacientes" });
@@ -419,7 +444,7 @@ const updatePatient = async (req, res) => {
   }
 };
 
-const getAppointments = async (req, res) => {
+const getAdminAppointments = async (req, res) => {
   try {
     const result = await connectDB.query("SELECT * FROM appointments");
     res.json(result[0]);
@@ -671,9 +696,20 @@ const deleteMedicalRecord = async (req, res) => {
 };
 
 // Obtener registros médicos
-const getMedicalRecords = async (req, res) => {
+const getAdminMedicalRecords = async (req, res) => {
   try {
     const result = await connectDB.query("SELECT * FROM medical_records");
+    res.json(result[0]);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const getPsychologistMedicalRecords = async (req, res) => {
+  const {psychologistEmail} = req.params;
+  console.log(psychologistEmail)
+  try {
+    const result = await connectDB.query("SELECT mr.id, mr.patient_id, mr.ocupation, mr.gender, mr.marital_status, mr.medical_history, mr.psychological_history, mr.treatment_plan, mr.observations FROM medical_records as mr JOIN patients ON mr.patient_id = patients.id JOIN appointments ON patients.id = appointments.patient_id JOIN psychologists ON appointments.psychologist_id = psychologists.id WHERE psychologists.email = ?;", [psychologistEmail]);
     res.json(result[0]);
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
@@ -935,15 +971,6 @@ const getPatientsByAge = async (req, res) => {
 const getPsychologistPatientsByAge = async (req, res) => {
   const {email} = req.params;
   try {
-    // const query = `
-    //   SELECT FLOOR(DATEDIFF(CURDATE(), date_of_birth) / 365) AS age, COUNT(*) AS count
-    //   FROM patients
-    //   JOIN appointments ON patients.id = appointments.patient_id 
-    //   WHERE appointments.psychologist_id = ?
-    //   GROUP BY age
-    //   ORDER BY age;
-    // `;
-
     const query = `
       SELECT FLOOR(DATEDIFF(CURDATE(), date_of_birth) / 365) AS age, COUNT(*) AS count
       FROM patients
@@ -1058,17 +1085,20 @@ export {
   checkToken,
   newPassword,
   getPsychologists,
+  getAPsychologist,
   confirmAccount,
-  getPatients,
+  getAdminPatients,
+  getPsychologystPatients,
   getPatientId,
   createPatient,
   updatePatient,
-  getAppointments,
+  getAdminAppointments,
   updateAppointment,
   updateAppointmentForm,
   deleteAppointment,
   createAppointment,
-  getMedicalRecords,
+  getAdminMedicalRecords,
+  getPsychologistMedicalRecords,
   createMedicalRecord,
   updateMedicalRecord,
   deleteMedicalRecord,
