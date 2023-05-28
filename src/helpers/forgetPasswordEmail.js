@@ -35,7 +35,6 @@ const forgetPasswordEmail = async (data) => {
         <p>Si no has creado esta cuenta, te pedimos que ignores este mensaje</p>`,
   });
 
-  console.log("Mensaje enviado %s",mailInformation.messageId);
 };
 
 export default forgetPasswordEmail;

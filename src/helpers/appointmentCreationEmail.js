@@ -47,7 +47,7 @@ const appointmentEmail = async (data, creation) => {
         Si usted no es el psicólogo o paciente mencionado en este correo, le pedimos que ignore este mensaje</p>`,
   });
 
-  console.log("Mensaje enviado %s",mailInformation.messageId);
+  log("Mensaje enviado %s",mailInformation.messageId);
 };
 
 export default appointmentEmail;
