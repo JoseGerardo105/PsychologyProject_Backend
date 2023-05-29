@@ -51,7 +51,7 @@ router.get("/get-a-psychologist/:email", getAPsychologist);
 //URLs manejo de citas
 router.get("/get-user-appointments", authentication, getUserAppointments);
 router.get("/get-admin-appointments", getAdminAppointments);
-router.post("/create-admin-appointment", createAppointment);
+router.post("/create-appointment", createAppointment);
 router.patch("/update-appointment/:eventId", updateAppointment);
 router.patch("/update-appointment-form/:eventId", updateAppointmentForm);
 router.delete("/delete-appointment/:eventId", deleteAppointment);

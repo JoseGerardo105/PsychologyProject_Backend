@@ -707,7 +707,7 @@ const getAdminMedicalRecords = async (req, res) => {
 const getPsychologistMedicalRecords = async (req, res) => {
   const {psychologistEmail} = req.params;
   try {
-    const result = await connectDB.query("SELECT mr.id, mr.patient_id, mr.ocupation, mr.gender, mr.marital_status, mr.medical_history, mr.psychological_history, mr.treatment_plan, mr.observations FROM medical_records as mr JOIN patients ON mr.patient_id = patients.id JOIN appointments ON patients.id = appointments.patient_id JOIN psychologists ON appointments.psychologist_id = psychologists.id WHERE psychologists.email = ?;", [psychologistEmail]);
+    const result = await connectDB.query("SELECT DISTINCT mr.id, mr.patient_id, mr.ocupation, mr.gender, mr.marital_status, mr.medical_history, mr.psychological_history, mr.treatment_plan, mr.observations FROM medical_records as mr JOIN patients ON mr.patient_id = patients.id JOIN appointments ON patients.id = appointments.patient_id JOIN psychologists ON appointments.psychologist_id = psychologists.id WHERE psychologists.email = ?;", [psychologistEmail]);
     res.json(result[0]);
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
