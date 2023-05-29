@@ -131,50 +131,58 @@ const getPsychologists = async (req, res) => {
 };
 
 const getAPsychologist = async (req, res) => {
-  const {email} = req.params;
+  const { email } = req.params;
   // prueba base de datos
-  const result = await connectDB.query("SELECT * from psychologists WHERE email = ?", [email]);
+  const result = await connectDB.query(
+    "SELECT * from psychologists WHERE email = ?",
+    [email]
+  );
   res.json(result[0]);
 };
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
-
-  // Validar la información del usuario
-  if (!email || !password) {
-    return res.status(400).json({ error: "Se requiere email y contraseña" });
-  }
-
-  //Comprobar si el email ingresado existe
-  const result = await checkUserByEmail(email);
-  if (result.length === 0) {
-    res
-      .status(401)
-      .json({ error: "La cuenta con la dirección email ingresada no existe" });
-  }
-
-  //Comprobar si la cuenta ya está confirmada
-  const resultConfirmation = await checkUserConfirmation(email);
-  if (resultConfirmation.length === 0) {
-    return res.status(401).json({ error: "Usuario aún no confirmado" });
-  }
-
-  //Autenticar el usuario
   try {
-    const isPasswordValid = await bcrypt.compare(password, result[0].password);
+    const { email, password } = req.body;
 
-    if (isPasswordValid) {
-      //Autenticar el usuario
-      const token = jwt.sign({ id: result[0].id }, "your_jwt_secret", {
-        expiresIn: "1h",
-      });
-      res.status(200).json({ token });
-    } else {
-      res.status(401).json({ error: "Contraseña incorrecta" });
+    // Validar la información del usuario
+    if (!email || !password) {
+      return res.status(400).json({ error: "Se requiere email y contraseña" });
     }
-  } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
-  }
+
+    //Comprobar si el email ingresado existe
+    const result = await checkUserByEmail(email);
+    if (result.length === 0) {
+      res.status(401).json({
+        error: "La cuenta con la dirección email ingresada no existe",
+      });
+    }
+
+    //Comprobar si la cuenta ya está confirmada
+    const resultConfirmation = await checkUserConfirmation(email);
+    if (resultConfirmation.length === 0) {
+      return res.status(401).json({ error: "Usuario aún no confirmado" });
+    }
+
+    //Autenticar el usuario
+    try {
+      const isPasswordValid = await bcrypt.compare(
+        password,
+        result[0].password
+      );
+
+      if (isPasswordValid) {
+        //Autenticar el usuario
+        const token = jwt.sign({ id: result[0].id }, "your_jwt_secret", {
+          expiresIn: "1h",
+        });
+        res.status(200).json({ token });
+      } else {
+        res.status(401).json({ error: "Contraseña incorrecta" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  } catch (error) {}
 };
 
 const profile = (req, res) => {
@@ -261,14 +269,16 @@ const getAdminPatients = async (req, res) => {
 };
 
 const getPsychologystPatients = async (req, res) => {
-  const {psychologistEmail} = req.params;
+  const { psychologistEmail } = req.params;
   try {
-
     // const result = await connectDB.query(
     //   "SELECT * FROM medical_records WHERE id = ?",
     //   [medicalRecordId]
     // );
-    const result = await connectDB.query("SELECT DISTINCT patients.id, patients.name, patients.document_number, patients.email, patients.address, patients.document_type_id, patients.phone, patients.date_of_birth FROM patients JOIN appointments ON patients.id = appointments.patient_id JOIN psychologists ON appointments.psychologist_id = psychologists.id WHERE psychologists.email = ?;",[psychologistEmail]);
+    const result = await connectDB.query(
+      "SELECT DISTINCT patients.id, patients.name, patients.document_number, patients.email, patients.address, patients.document_type_id, patients.phone, patients.date_of_birth FROM patients JOIN appointments ON patients.id = appointments.patient_id JOIN psychologists ON appointments.psychologist_id = psychologists.id WHERE psychologists.email = ?;",
+      [psychologistEmail]
+    );
 
     res.json(result[0]);
   } catch (error) {
@@ -705,9 +715,12 @@ const getAdminMedicalRecords = async (req, res) => {
 };
 
 const getPsychologistMedicalRecords = async (req, res) => {
-  const {psychologistEmail} = req.params;
+  const { psychologistEmail } = req.params;
   try {
-    const result = await connectDB.query("SELECT DISTINCT mr.id, mr.patient_id, mr.ocupation, mr.gender, mr.marital_status, mr.medical_history, mr.psychological_history, mr.treatment_plan, mr.observations FROM medical_records as mr JOIN patients ON mr.patient_id = patients.id JOIN appointments ON patients.id = appointments.patient_id JOIN psychologists ON appointments.psychologist_id = psychologists.id WHERE psychologists.email = ?;", [psychologistEmail]);
+    const result = await connectDB.query(
+      "SELECT DISTINCT mr.id, mr.patient_id, mr.ocupation, mr.gender, mr.marital_status, mr.medical_history, mr.psychological_history, mr.treatment_plan, mr.observations FROM medical_records as mr JOIN patients ON mr.patient_id = patients.id JOIN appointments ON patients.id = appointments.patient_id JOIN psychologists ON appointments.psychologist_id = psychologists.id WHERE psychologists.email = ?;",
+      [psychologistEmail]
+    );
     res.json(result[0]);
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
@@ -966,7 +979,7 @@ const getPatientsByAge = async (req, res) => {
 
 //Reporte para un psicólogo
 const getPsychologistPatientsByAge = async (req, res) => {
-  const {email} = req.params;
+  const { email } = req.params;
   try {
     const query = `
       SELECT FLOOR(DATEDIFF(CURDATE(), date_of_birth) / 365) AS age, COUNT(*) AS count
@@ -977,7 +990,7 @@ const getPsychologistPatientsByAge = async (req, res) => {
       GROUP BY age
       ORDER BY age;
       `;
-    const [rows] = await connectDB.query(query,[email]);
+    const [rows] = await connectDB.query(query, [email]);
 
     const ageRanges = [
       { min: 0, max: 20 },
@@ -1058,10 +1071,7 @@ const getAdminIncomeByAppointments = async (req, res) => {
       ORDER BY DATE(start_time);
     `;
 
-    const [rows] = await connectDB.query(query, [
-      startDate,
-      endDate,
-    ]);
+    const [rows] = await connectDB.query(query, [startDate, endDate]);
     const totalIncomeSum = rows.reduce((accumulator, current) => {
       const totalIncome = parseInt(current.total_income);
       return accumulator + totalIncome;
@@ -1106,5 +1116,5 @@ export {
   getPatientsByAge,
   getAdminIncomeByAppointments,
   getPsyichologistIncomeByAppointments,
-  getPsychologistPatientsByAge
+  getPsychologistPatientsByAge,
 };
